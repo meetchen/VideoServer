@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace vdse
 {
@@ -20,6 +21,8 @@ namespace vdse
                 static string FileName(const string &path);
                 // 返回后缀
                 static string Extension(const string &path);
+                // 字符串分割
+                static std::vector<string> SplitString(const string &s, const string &delimiter);
         };
     }
 }

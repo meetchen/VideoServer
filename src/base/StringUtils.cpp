@@ -72,3 +72,28 @@ string StringUtils::Extension(const string &path)
     }
     return string();  
 }
+
+std::vector<string> StringUtils::SplitString(const string &s, const string &delimiter)
+{
+    if (delimiter.empty()) return {};
+
+    size_t last = 0, next = 0;
+    
+    std::vector<string> res;
+
+    while ((next = s.find(delimiter, last)) != string::npos)
+    {
+        if (next > last)
+        {
+            res.push_back(s.substr(last, next - last));
+        }
+        last = next + delimiter.size();
+    }
+
+    if (last < s.size())
+    {
+        res.push_back(s.substr(last));
+    }
+
+    return res;
+}
