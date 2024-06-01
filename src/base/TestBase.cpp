@@ -2,7 +2,10 @@
 #include "StringUtils.h"
 #include "NoCopyable.h"
 #include "Singleton.h"
+#include "TaskMg.h"
 #include <iostream>
+
+using namespace vdse::base;
 
 void TestTTime()
 {
@@ -65,7 +68,6 @@ void TestString()
     }
 }
 
-
 void TestSingle()
 {
     class A : public vdse::base::NoCopyable
@@ -83,10 +85,31 @@ void TestSingle()
 
 }
 
+void TestTaskMg()
+{
+    TaskPtr task1 = std::make_shared<Task>([](const TaskPtr& task){
+        std::cout << "task1: " << 1000 << std::endl;
+        task->Restart();
+    }, 1000);
+
+    TaskPtr task2 = std::make_shared<Task>([](const TaskPtr& task){
+        std::cout << "task2: " << 3000 << std::endl;
+        task->Restart();
+    }, 3000);
+
+    sTm->Add(task1);
+    sTm->Add(task2);
+    while (1)
+    {
+        sTm->OnWork();
+    }
+}
+
 int main(int argc, const char **argv)
 {
     // TestTTime();
     // TestString();
-    TestSingle();
+    // TestSingle();
+    TestTaskMg();
     return 0;
 }
