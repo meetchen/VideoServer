@@ -20,6 +20,11 @@ namespace vdse
                 // 仅返回文件名
                 static string FileName(const string &path);
                 // 返回后缀
+                /**
+                 * @description: 
+                 * @param {string} &path
+                 * @return {*}
+                 */
                 static string Extension(const string &path);
                 // 字符串分割
                 static std::vector<string> SplitString(const string &s, const string &delimiter);

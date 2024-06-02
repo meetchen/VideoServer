@@ -13,7 +13,7 @@ namespace vdse
                 // 表示当前的UTC时间，单位是毫秒
                 static int64_t NowMS();
                 static int64_t Now();
-                static int64_t Now(int &year, int &month, int &dau, int &hour, int &minute, int &second);
+                static int64_t Now(int &year, int &month, int &day, int &hour, int &minute, int &second);
                 static std::string ISOTime();
         };
     }

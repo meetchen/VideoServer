@@ -4,10 +4,15 @@
 #include "Singleton.h"
 #include "TaskMg.h"
 #include "Logger.h"
+#include "FileLog.h"
+#include "FileMg.h"
+#include <thread>
 #include "LogStream.h"
 #include <iostream>
 
 using namespace vdse::base;
+
+static std::thread t;
 
 void TestTTime()
 {
@@ -109,13 +114,17 @@ void TestTaskMg()
 
 void testLogStream()
 {
-    
-    LOG_INFO << "test info";
-    LOG_ERROR << "test error";
-    LOG_TRACE << "test trace";
-    LOG_WARN << "test warn";
-    LOG_DEBUG << "test debug";
+    t = std::thread([](){
+        while (true)
+        {
+            LOG_INFO << "test info " << TTime::ISOTime();
+            LOG_DEBUG << "test debug " << TTime::ISOTime();
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }   
+    });
+
 }
+
 
 int main(int argc, const char **argv)
 {
@@ -123,8 +132,28 @@ int main(int argc, const char **argv)
     // TestString();
     // TestSingle();
     // TestTaskMg();
-    vdse::base::g_logger = new Logger();
-    g_logger->SetLogLevel(kDebug);
+
+    FileLogPtr log = sFileMg->GetFileLog("test.log");
+
+    log->SetRotate(kRotateMinute);
+
+    vdse::base::g_logger = new Logger(log);
+
+    g_logger->SetLogLevel(kTrace);
+
+    TaskPtr task1 = std::make_shared<Task>([](const TaskPtr& task){
+        sFileMg->Oncheck();
+        task->Restart();
+    }, 1000);
+    sTm->Add(task1);
     testLogStream();
+    while (1)
+    {
+        sTm->OnWork();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    }
+    testLogStream();
+
     return 0;
 }

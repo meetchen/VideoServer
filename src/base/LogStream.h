@@ -11,8 +11,14 @@ namespace vdse
         class LogStream
         {
             public:
+            
                 LogStream(Logger *loger, const char *file, int line, LogLevel l, const char *func = nullptr);
+                
+                /**
+                 * 在析构的时候执行日志的写操作
+                */
                 ~LogStream();
+
                 template<typename T> LogStream & operator<<(const T&value)
                 {
                     stream_ << value;
