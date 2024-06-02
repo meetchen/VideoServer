@@ -3,6 +3,8 @@
 #include "NoCopyable.h"
 #include "Singleton.h"
 #include "TaskMg.h"
+#include "Logger.h"
+#include "LogStream.h"
 #include <iostream>
 
 using namespace vdse::base;
@@ -105,11 +107,24 @@ void TestTaskMg()
     }
 }
 
+void testLogStream()
+{
+    
+    LOG_INFO << "test info";
+    LOG_ERROR << "test error";
+    LOG_TRACE << "test trace";
+    LOG_WARN << "test warn";
+    LOG_DEBUG << "test debug";
+}
+
 int main(int argc, const char **argv)
 {
     // TestTTime();
     // TestString();
     // TestSingle();
-    TestTaskMg();
+    // TestTaskMg();
+    vdse::base::g_logger = new Logger();
+    g_logger->SetLogLevel(kDebug);
+    testLogStream();
     return 0;
 }
