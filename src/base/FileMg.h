@@ -17,7 +17,7 @@ namespace vdse
             public:
                 FileMg() = default;
                 ~FileMg() = default;
-                void Oncheck();
+                void OnCheck();
                 FileLogPtr GetFileLog(const std::string &file_name);
                 void RemoveFileLog(const FileLogPtr &log);
                 void RotateDays(const FileLogPtr &file);

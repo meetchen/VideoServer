@@ -50,7 +50,7 @@ namespace vdse
                 ConfigMg() = default;
                 ~ConfigMg() = default;
                 bool LoadConfig(const std::string &file);
-                ConfigPtr GetConfigPtr();
+                ConfigPtr GetConfig();
             private:
                 std::mutex lock_;
                 ConfigPtr config_;

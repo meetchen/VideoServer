@@ -5,6 +5,7 @@
 #include <thread>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <iostream>
 
 using namespace vdse::base;
 
@@ -58,5 +59,12 @@ LogStream::LogStream(Logger *loger, const char *file, int line, LogLevel l, cons
 LogStream::~LogStream()
 {
     stream_ << "\n";
-    logger_->write(stream_.str());
+    if (logger_)
+    {
+        logger_->write(stream_.str());
+    }
+    else
+    {
+        std::cout << stream_.str();
+    }
 }

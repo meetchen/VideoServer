@@ -11,7 +11,7 @@ namespace
     static vdse::base::FileLogPtr file_log_nullptr;
 }
 
-void FileMg::Oncheck()
+void FileMg::OnCheck()
 {
     bool day_change = false, hour_change = false, minute_change = false;
 

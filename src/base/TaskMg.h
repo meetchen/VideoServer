@@ -22,6 +22,6 @@ namespace vdse
                 std::unordered_set<TaskPtr> tasks_;
                 std::mutex lock_;
         };
-        #define sTm vdse::base::Singletion<vdse::base::TaskMg>::Instance()
+        #define sTaskMg vdse::base::Singletion<vdse::base::TaskMg>::Instance()
     }
 }

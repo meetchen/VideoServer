@@ -1,6 +1,7 @@
 
 #include "Config.h"
 #include "LogStream.h"
+#include <fstream>
 
 using namespace vdse::base;
 
@@ -9,9 +10,15 @@ bool Config::LoadConfig(const std::string &file)
     LOG_DEBUG << "config file : " << file;
     
     Json::Value root;
-    Json::Reader reader;
+    Json::CharReaderBuilder reader;
+    std::ifstream in(file);
+    std::string err;
     
-    if (!reader.parse(file, root))
+
+    auto ok = Json::parseFromStream(reader,in,&root,&err);
+
+    
+    if (!ok)
     {
         LOG_DEBUG << "config file : " << file << " parse error .";
         return false;
@@ -98,6 +105,9 @@ bool Config::ParseLogInfo(const Json::Value &root)
         else if (rotate == "DAY")
         {
             log_info_ -> rotate = kRotateDay;
+        } else if (rotate == "MINTUE")
+        {
+            log_info_ -> rotate = kRotateMinute;
         }
     }
     return true;
@@ -117,12 +127,12 @@ bool ConfigMg::LoadConfig(const std::string &file)
     {
         std::lock_guard<std::mutex> lk(lock_);
         config_ = config;
-        return false;
+        return true;
     }
     return false;
 }
 
-ConfigPtr ConfigMg::GetConfigPtr()
+ConfigPtr ConfigMg::GetConfig()
 {
     std::lock_guard<std::mutex> lk(lock_);
     return config_;

@@ -104,11 +104,11 @@ void TestTaskMg()
         task->Restart();
     }, 3000);
 
-    sTm->Add(task1);
-    sTm->Add(task2);
+    sTaskMg->Add(task1);
+    sTaskMg->Add(task2);
     while (1)
     {
-        sTm->OnWork();
+        sTaskMg->OnWork();
     }
 }
 
@@ -142,14 +142,14 @@ int main(int argc, const char **argv)
     g_logger->SetLogLevel(kTrace);
 
     TaskPtr task1 = std::make_shared<Task>([](const TaskPtr& task){
-        sFileMg->Oncheck();
+        sFileMg->OnCheck();
         task->Restart();
     }, 1000);
-    sTm->Add(task1);
+    sTaskMg->Add(task1);
     testLogStream();
     while (1)
     {
-        sTm->OnWork();
+        sTaskMg->OnWork();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     }
