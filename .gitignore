@@ -1,3 +1,7 @@
 .vscode/
 build/
 .gitignore
+third_party/*
+!third_party/jsoncpp
+lib
+bin/sbin/videoserver

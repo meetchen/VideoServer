@@ -1,0 +1,12 @@
+{
+    "name" : "vdse server",
+    "cpu_start" : 0,
+    "threads" : 4,
+    "log" :
+    {
+        "level" : "DEBUG",
+        "name" : "vdse.log",
+        "path" : "../log/",
+        "rotate" : "MINUTE"
+    }
+}
