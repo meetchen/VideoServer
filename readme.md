@@ -10,4 +10,6 @@
 ### 2024-6-2
 - 完成日志管理类逻辑[FileMg.h](src/base/FileMg.h)
 - 完成日志管理功能测试[TestBase.cpp](src/base/TestBase.cpp)
-
+### 2024-6-3
+- 完成jsoncpp的编译安装
+- 完成对于json配置文件的加载保存[Config.h](src/base/Config.h)
