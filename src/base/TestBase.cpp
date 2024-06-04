@@ -137,7 +137,7 @@ int main(int argc, const char **argv)
 
     log->SetRotate(kRotateMinute);
 
-    vdse::base::g_logger = new Logger(log);
+    vdse::base::g_logger.reset(new Logger(log));
 
     g_logger->SetLogLevel(kTrace);
 
@@ -153,7 +153,6 @@ int main(int argc, const char **argv)
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     }
-    testLogStream();
 
     return 0;
 }

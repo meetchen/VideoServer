@@ -12,7 +12,7 @@ using namespace vdse::base;
 
 static thread_local pid_t thread_id = 0;
 
-Logger *vdse::base::g_logger = nullptr;
+LoggerPtr vdse::base::g_logger = nullptr;
 
 const char *log_str[] = 
 {
@@ -23,7 +23,7 @@ const char *log_str[] =
     " Error "
 };
 
-LogStream::LogStream(Logger *loger, const char *file, int line, LogLevel l, const char *func)
+LogStream::LogStream(LoggerPtr &loger, const char *file, int line, LogLevel l, const char *func)
 :logger_(loger)
 {
     const char *file_name = strrchr(file, '/');

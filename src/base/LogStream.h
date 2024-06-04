@@ -3,17 +3,24 @@
 
 #include "Logger.h"
 #include <sstream>
+#include <memory>
 
 namespace vdse
 {
     namespace base
     {   
-        extern Logger * g_logger;
+        // extern Logger * g_logger;
+
+        
+        using LoggerPtr = std::shared_ptr<Logger>;
+
+        extern LoggerPtr g_logger;
+
         class LogStream
         {
             public:
             
-                LogStream(Logger *loger, const char *file, int line, LogLevel l, const char *func = nullptr);
+                LogStream(LoggerPtr &loger, const char *file, int line, LogLevel l, const char *func = nullptr);
                 
                 /**
                  * 在析构的时候执行日志的写操作
@@ -27,7 +34,7 @@ namespace vdse
                 }
             private:
                 std::stringstream stream_;
-                Logger* logger_{nullptr};
+                LoggerPtr logger_{nullptr};
         };
     }
 }

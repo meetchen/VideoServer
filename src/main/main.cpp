@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <thread>
+#include <memory>
 #include <filesystem>
 
 using namespace vdse::base;
@@ -32,7 +33,9 @@ int main(int argc,const char ** argv)
         return -1;
     }
     log->SetRotate(log_info->rotate);
-    g_logger = new Logger(log);
+
+    g_logger.reset(new Logger(log));
+
     g_logger->SetLogLevel(log_info->level);
 
     TaskPtr task4 = std::make_shared<Task>([](const TaskPtr &task)
