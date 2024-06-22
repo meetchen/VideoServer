@@ -3,11 +3,14 @@
 #include <vector>
 #include <cstring>
 #include <sys/epoll.h>
+#include <memory>
+#include <unordered_map>
 
-namespace vdms
+namespace vdse
 {
     namespace network
     {
+        using EventPtr = std::shared_ptr<Event>;
         class EventLoop
         {
             public:
@@ -16,11 +19,20 @@ namespace vdms
             
                 void Loop();
                 void Quit();
+
+                void AddEvent(const EventPtr& event);
+                void DelEvent(const EventPtr& event);
+
+                bool EnableEventWriting(const EventPtr& event, bool enable);
+                bool EnableEventReading(const EventPtr& event, bool enable);
+
+                
             
             private:
                 bool looping_{false};
                 int epoll_fd_{-1};
                 std::vector<struct epoll_event> epoll_events_;
+                std::unordered_map<int, EventPtr> events_;
         };
 
     }
