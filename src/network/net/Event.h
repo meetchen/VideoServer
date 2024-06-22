@@ -22,7 +22,7 @@ namespace vdse
                 virtual void OnWrite() {}
                 virtual void OnError(const std::string &err_msg) {}
                 virtual void OnClose() {}
-
+ 
                 bool EnableWriting(bool enable);
                 bool EnableReading(bool enable);
                 int Fd() const;
