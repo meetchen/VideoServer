@@ -1,7 +1,7 @@
 #include "EventLoop.h"
 #include "network/base/Network.h"
 #include "Event.h"
-#include <sys/types.h>          
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <iostream>
 
@@ -9,9 +9,8 @@ using namespace vdse::network;
 
 static thread_local EventLoop *t_local_eventLoop = nullptr;
 
-EventLoop::EventLoop():
-epoll_fd_(::epoll_create(1024)),
-epoll_events_(1024)
+EventLoop::EventLoop() : epoll_fd_(::epoll_create(1024)),
+                         epoll_events_(1024)
 {
     if (t_local_eventLoop)
     {
@@ -31,9 +30,9 @@ void EventLoop::Loop()
     looping_ = true;
     while (looping_)
     {
-        memset(&epoll_events_[0], 0x3f, sizeof(struct epoll_event) * epoll_events_.size());
-        auto ret = ::epoll_wait(epoll_fd_, (struct epoll_event *)&epoll_events_[0], epoll_events_.size(), -1);
-        if (ret > 0)
+        memset(&epoll_events_[0], 0x00, sizeof(struct epoll_event) * epoll_events_.size());
+        auto ret = ::epoll_wait(epoll_fd_, (struct epoll_event *)&epoll_events_[0], static_cast<int>(epoll_events_.size()), -1);
+        if (ret >= 0)
         {
             for (int i = 0; i < ret; i++)
             {
@@ -50,7 +49,7 @@ void EventLoop::Loop()
                     continue;
                 }
 
-                const EventPtr& event_ptr = iter->second;
+                const EventPtr &event_ptr = iter->second;
 
                 // 检测是否发生事件错误
                 if (ev.events & EPOLLERR)
@@ -76,14 +75,10 @@ void EventLoop::Loop()
                     event_ptr->OnWrite();
                 }
             }
-            if (ret == epoll_events_.size ())
+            if (ret == epoll_events_.size())
             {
-                epoll_events_.resize(epoll_events_.size () * 2);
+                epoll_events_.resize(epoll_events_.size() * 2);
             }
-        }
-        else if (ret == 0)
-        {
-
         }
         else
         {
@@ -97,10 +92,8 @@ void EventLoop::Quit()
     looping_ = false;
 }
 
-
-void EventLoop::AddEvent(const EventPtr& event)
+void EventLoop::AddEvent(const EventPtr &event)
 {
-    std::cout << "add Event fd " << event->fd_ << std::endl;
 
     auto iter = events_.find(event->fd_);
     if (iter != events_.end())
@@ -108,16 +101,16 @@ void EventLoop::AddEvent(const EventPtr& event)
         return;
     }
     event->event_ |= kEventRead;
-    events_[event->Fd()] = event;
+    events_[event->fd_] = event;
 
     struct epoll_event ev;
     memset(&ev, 0x00, sizeof(struct epoll_event));
     ev.events = event->event_;
     ev.data.fd = event->fd_;
-    epoll_ctl(epoll_fd_, EPOLL_CTL_ADD,event->fd_, &ev);
+    epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, event->fd_, &ev);
 }
 
-void EventLoop::DelEvent(const EventPtr& event)
+void EventLoop::DelEvent(const EventPtr &event)
 {
     auto iter = events_.find(event->fd_);
     if (iter == events_.end())
@@ -130,10 +123,10 @@ void EventLoop::DelEvent(const EventPtr& event)
     memset(&ev, 0x00, sizeof(struct epoll_event));
     ev.events = event->event_;
     ev.data.fd = event->Fd();
-    epoll_ctl(epoll_fd_, EPOLL_CTL_DEL,event->fd_, &ev);
+    epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, event->fd_, &ev);
 }
 
-bool EventLoop::EnableEventWriting(const EventPtr& event, bool enable)
+bool EventLoop::EnableEventWriting(const EventPtr &event, bool enable)
 {
     auto iter = events_.find(event->Fd());
     if (iter == events_.end())
@@ -155,11 +148,11 @@ bool EventLoop::EnableEventWriting(const EventPtr& event, bool enable)
     memset(&ev, 0x00, sizeof(struct epoll_event));
     ev.events = event->event_;
     ev.data.fd = event->Fd();
-    epoll_ctl(epoll_fd_, EPOLL_CTL_MOD,event->Fd(), &ev);
+    epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, event->Fd(), &ev);
     return true;
 }
 
-bool EventLoop::EnableEventReading(const EventPtr& event, bool enable)
+bool EventLoop::EnableEventReading(const EventPtr &event, bool enable)
 {
     auto iter = events_.find(event->Fd());
     if (iter == events_.end())
@@ -181,7 +174,6 @@ bool EventLoop::EnableEventReading(const EventPtr& event, bool enable)
     memset(&ev, 0x00, sizeof(struct epoll_event));
     ev.events = event->event_;
     ev.data.fd = event->Fd();
-    epoll_ctl(epoll_fd_, EPOLL_CTL_MOD,event->Fd(), &ev);
+    epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, event->Fd(), &ev);
     return true;
-
 }

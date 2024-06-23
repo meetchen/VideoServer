@@ -8,7 +8,7 @@ using namespace vdse::network;
 Event::Event(EventLoop *event_loop)
 :loop_(event_loop)
 {
-    std::cout << "hello world" << std::endl;
+    
 }
 
 Event::Event(EventLoop *event_loop, int fd)

@@ -11,21 +11,17 @@ using namespace vdse::network;
 PipeEvent::PipeEvent(EventLoop *loop)
 :Event(loop)
 {
-
-    std::cout << "Pipe Event " << std::endl;
     int fd[2] = {0};
     int ret = ::pipe2(fd, O_NONBLOCK);
-    std::cout << "fd_: " << fd_ << " write_fd_: " << write_fd_ << std::endl;
-
 
     if (ret < 0)
     {
-
         NETWORK_ERROR << "pipe2 init error";
         exit(-1);
     }
     fd_ = fd[0];
     write_fd_ = fd[1];
+
 }
 
 PipeEvent::~PipeEvent()
@@ -56,7 +52,13 @@ void PipeEvent::OnError(const std::string &err_msg)
 
 void PipeEvent::Write(const char* data, size_t len)
 {
-    ::write(write_fd_, data, len);
+    int ret = ::write(write_fd_, data, len);
+    if (ret < 0)
+    {
+        std::cout << "write error, errno :" << errno << std::endl;
+    }
+
+
 }
 
 void PipeEvent::OnClose() 

@@ -20,10 +20,10 @@ namespace vdse
                 Event(EventLoop *event_loop);
                 Event(EventLoop *event_loop, int fd);
                 ~Event();
-                virtual void OnRead() {}
-                virtual void OnWrite() {}
-                virtual void OnError(const std::string &err_msg) {}
-                virtual void OnClose() {}
+                virtual void OnRead() {};
+                virtual void OnWrite() {};
+                virtual void OnError(const std::string &err_msg) {};
+                virtual void OnClose() {};
  
                 bool EnableWriting(bool enable);
                 bool EnableReading(bool enable);
@@ -32,7 +32,7 @@ namespace vdse
             protected:
                 EventLoop *loop_{nullptr};
                 int fd_{-1};
-                int event_{-1};
+                int event_{0};
 
 
         };

@@ -15,7 +15,6 @@ void TestEventLoopThread()
     EventLoop *loop = eventloop_thread.Loop();
     if (loop)
     {
-        std::cout << "Loop success " << std::endl;
 
         PipeEventPtr pipe = std::make_shared<PipeEvent>(loop);
 
