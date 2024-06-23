@@ -4,6 +4,7 @@
 #include <cstring>
 #include <sys/epoll.h>
 #include <memory>
+#include "Event.h"
 #include <unordered_map>
 
 namespace vdse

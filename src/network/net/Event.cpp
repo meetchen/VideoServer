@@ -1,12 +1,14 @@
 #include "Event.h"
 #include "EventLoop.h"
 #include <unistd.h>
+#include <iostream>
 
 using namespace vdse::network;
 
-Event::Event()
+Event::Event(EventLoop *event_loop)
+:loop_(event_loop)
 {
-
+    std::cout << "hello world" << std::endl;
 }
 
 Event::Event(EventLoop *event_loop, int fd)

@@ -14,8 +14,10 @@ namespace vdse
         
         class Event : public std::enable_shared_from_this<Event>
         {
+            friend class EventLoop;
+
             public:
-                Event();
+                Event(EventLoop *event_loop);
                 Event(EventLoop *event_loop, int fd);
                 ~Event();
                 virtual void OnRead() {}
@@ -27,10 +29,11 @@ namespace vdse
                 bool EnableReading(bool enable);
                 int Fd() const;
             
-            private:
+            protected:
+                EventLoop *loop_{nullptr};
                 int fd_{-1};
                 int event_{-1};
-                EventLoop *loop_{nullptr};
+
 
         };
     }

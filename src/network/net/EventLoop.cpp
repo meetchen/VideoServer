@@ -3,7 +3,7 @@
 #include "Event.h"
 #include <sys/types.h>          
 #include <sys/socket.h>
-
+#include <iostream>
 
 using namespace vdse::network;
 
@@ -100,7 +100,9 @@ void EventLoop::Quit()
 
 void EventLoop::AddEvent(const EventPtr& event)
 {
-    auto iter = events_.find(event->Fd());
+    std::cout << "add Event fd " << event->fd_ << std::endl;
+
+    auto iter = events_.find(event->fd_);
     if (iter != events_.end())
     {
         return;
@@ -110,14 +112,14 @@ void EventLoop::AddEvent(const EventPtr& event)
 
     struct epoll_event ev;
     memset(&ev, 0x00, sizeof(struct epoll_event));
-    ev.events = event->events_;
-    ev.data.fd = event->Fd();
-    epoll_ctl(epoll_fd_, EPOLL_CTL_ADD,event->Fd(), &ev);
+    ev.events = event->event_;
+    ev.data.fd = event->fd_;
+    epoll_ctl(epoll_fd_, EPOLL_CTL_ADD,event->fd_, &ev);
 }
 
 void EventLoop::DelEvent(const EventPtr& event)
 {
-    auto iter = events_.find(event->Fd());
+    auto iter = events_.find(event->fd_);
     if (iter == events_.end())
     {
         return;
@@ -126,9 +128,9 @@ void EventLoop::DelEvent(const EventPtr& event)
 
     struct epoll_event ev;
     memset(&ev, 0x00, sizeof(struct epoll_event));
-    ev.events = event->events_;
+    ev.events = event->event_;
     ev.data.fd = event->Fd();
-    epoll_ctl(epoll_fd_, EPOLL_CTL_DEL,event->Fd(), &ev);
+    epoll_ctl(epoll_fd_, EPOLL_CTL_DEL,event->fd_, &ev);
 }
 
 bool EventLoop::EnableEventWriting(const EventPtr& event, bool enable)
@@ -151,7 +153,7 @@ bool EventLoop::EnableEventWriting(const EventPtr& event, bool enable)
 
     struct epoll_event ev;
     memset(&ev, 0x00, sizeof(struct epoll_event));
-    ev.events = event->events_;
+    ev.events = event->event_;
     ev.data.fd = event->Fd();
     epoll_ctl(epoll_fd_, EPOLL_CTL_MOD,event->Fd(), &ev);
     return true;
@@ -177,7 +179,7 @@ bool EventLoop::EnableEventReading(const EventPtr& event, bool enable)
 
     struct epoll_event ev;
     memset(&ev, 0x00, sizeof(struct epoll_event));
-    ev.events = event->events_;
+    ev.events = event->event_;
     ev.data.fd = event->Fd();
     epoll_ctl(epoll_fd_, EPOLL_CTL_MOD,event->Fd(), &ev);
     return true;
