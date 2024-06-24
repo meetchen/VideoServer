@@ -13,3 +13,14 @@
 ### 2024-6-3
 - 完成jsoncpp的编译安装
 - 完成对于json配置文件的加载保存[Config.h](src/base/Config.h)
+### 2024-6-23
+- 开始进行网络库方面函数实现
+- 完成对于epoll事件循环的类创建[EventLoop.cpp](src/network/net/EventLoop.cpp)，以及测试
+- 处理bug，包括对于event初始化为-1，导致后续“|”加权限，加不上，无法epoll触发读写事件
+- 使用future primose等完成线程的同步
+### 2024-6-24
+- 完成对于Eventloop绑定任务的事件，任务队列 TODO : 待捋清楚
+- 完成基于智能指针的时间轮[TimingWheel.h](src/network/net/TimingWheel.h)
+    - 使用指针智能析构的时候，调用析构函数，将回调函数放到智能指针的析构函数里面（deque）
+    - 使用移动构造函数，避免中间的转换
+

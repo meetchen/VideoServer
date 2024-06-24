@@ -1,6 +1,7 @@
 #include "EventLoop.h"
 #include "network/base/Network.h"
 #include "Event.h"
+#include "base/TTime.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <iostream>
@@ -28,10 +29,11 @@ EventLoop::~EventLoop()
 void EventLoop::Loop()
 {
     looping_ = true;
+    int timeout = 1000;
     while (looping_)
     {
         memset(&epoll_events_[0], 0x00, sizeof(struct epoll_event) * epoll_events_.size());
-        auto ret = ::epoll_wait(epoll_fd_, (struct epoll_event *)&epoll_events_[0], static_cast<int>(epoll_events_.size()), -1);
+        auto ret = ::epoll_wait(epoll_fd_, (struct epoll_event *)&epoll_events_[0], static_cast<int>(epoll_events_.size()), timeout);
         if (ret >= 0)
         {
             for (int i = 0; i < ret; i++)
@@ -79,6 +81,13 @@ void EventLoop::Loop()
             {
                 epoll_events_.resize(epoll_events_.size() * 2);
             }
+
+            // 执行eventloop绑定的事件
+            RunFunctions();
+            
+            // 更新时间轮
+            auto now = base::TTime::NowMS();
+            timing_wheel_.OnTimer(now);
         }
         else
         {
@@ -176,4 +185,124 @@ bool EventLoop::EnableEventReading(const EventPtr &event, bool enable)
     ev.data.fd = event->Fd();
     epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, event->Fd(), &ev);
     return true;
+}
+
+void EventLoop::RunInLoop(const Func &f)
+{
+    if (InLoop())
+    {
+        f();
+        return;
+    }
+    std::lock_guard<std::mutex> lk(lock_);
+    functions_.emplace(f);
+    WakeUp();
+}
+
+void EventLoop::RunInLoop(Func &&f)
+{
+    if (InLoop())
+    {
+        f();
+        return;
+    }
+    std::lock_guard<std::mutex> lk(lock_);
+    // 提示编译器 使用右值函数
+    functions_.emplace(std::move(f));
+
+    WakeUp();
+}
+
+void EventLoop::RunFunctions()
+{
+    std::lock_guard<std::mutex> lk(lock_);
+    while (!functions_.empty())
+    {
+        auto f = functions_.front();
+        f();
+        functions_.pop();
+    }
+}
+
+bool EventLoop::InLoop()
+{
+    return this == t_local_eventLoop;
+}
+
+void EventLoop::WakeUp()
+{
+    if (!pipe_event_)
+    {
+        pipe_event_ = std::make_shared<PipeEvent>(this);
+        AddEvent(pipe_event_);
+    }
+    int msg = 1;
+    pipe_event_->Write(reinterpret_cast<const char *>(&msg), sizeof(msg));
+}
+
+void EventLoop::AssertLoopInThread()
+{
+    if (!InLoop())
+    {
+        NETWORK_ERROR << "Forbidden in this thread ";
+        exit(-1);
+    }
+}
+
+
+void EventLoop::RunAfter(double delay, const Func &cb)
+{
+    if (InLoop())
+    {
+        timing_wheel_.RunAfter(delay, cb);
+    }
+    else
+    {
+        RunInLoop([this, delay, cb](){
+            timing_wheel_.RunAfter(delay, cb);
+        });
+    }
+}
+
+void EventLoop::RunAfter(double delay, Func &&cb)
+{
+    if (InLoop())
+    {
+        timing_wheel_.RunAfter(delay, std::move(cb));
+
+    }
+    else
+    {
+        RunInLoop([this, delay, cb](){
+            timing_wheel_.RunAfter(delay, std::move(cb));
+        });
+    }
+}
+
+void EventLoop::RunEvery(double interval, const Func &cb)
+{
+    if (InLoop())
+    {
+        timing_wheel_.RunEvery(interval, cb);
+    }
+    else
+    {
+        RunInLoop([this, interval, cb](){
+            timing_wheel_.RunEvery(interval, cb);
+        });
+    }
+}
+
+void EventLoop::RunEvery(double interval, Func &&cb)
+{
+    if (InLoop())
+    {
+        timing_wheel_.RunEvery(interval, std::move(cb));
+    }
+    else
+    {
+        RunInLoop([this, interval, cb](){
+            timing_wheel_.RunEvery(interval, std::move(cb));
+        });
+    }
 }

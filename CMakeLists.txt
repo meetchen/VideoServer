@@ -24,7 +24,7 @@ elseif (NOT CMAKE_BUILD_TYPE STREQUAL Debug)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -g -pipe -Wall -Werror -Wno-unused-variable -lrt -pthread")
 endif ()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing -Wno-error=shadow -Wno-sign-compare")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing -Wno-error=shadow -Wno-sign-compare -Werror=unused-function")
 
 message(STATUS "USING GCC VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
 

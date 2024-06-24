@@ -52,3 +52,8 @@ EventLoop *EventLoopThread::Loop() const
 {
     return loop_;
 }
+
+std::thread& EventLoopThread::Thread()
+{
+    return thread_;
+}

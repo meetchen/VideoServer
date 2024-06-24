@@ -6,6 +6,7 @@
 #include <thread>
 #include <condition_variable>
 #include "EventLoop.h"
+#include "network/net/TimingWheel.h"
 
 
 namespace vdse
@@ -18,6 +19,7 @@ namespace vdse
                 EventLoopThread();
                 ~EventLoopThread();
                 void Run();
+                std::thread& Thread();
                 EventLoop *Loop() const;
             private:
                 void StartEventLoop();
