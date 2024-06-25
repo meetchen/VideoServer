@@ -31,7 +31,7 @@ namespace vdse
                 uint16_t Port() const;
                 void GetSockAddr(struct sockaddr *saddr) const;
 
-                bool IsIpV6();
+                bool IsIpV6() const;
                 bool IsWanIp();
                 bool IsLanIp();
                 bool IsLoopbackIp();

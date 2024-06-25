@@ -1,4 +1,4 @@
-#include "network/net/InetAddress.h"
+#include "network/base/InetAddress.h"
 #include "network/base/Network.h"
 #include <iostream>
 #include <cstring>
@@ -101,7 +101,7 @@ void InetAddress::GetSockAddr(struct sockaddr *saddr) const
         memset(&addr_in6, 0x00, sizeof(addr_in6));
 
         addr_in6->sin6_family = AF_INET6;
-        addr_in6->sin6_port = 0;
+        addr_in6->sin6_port =  htons(std::atoi(port_.c_str()));
 
         if (::inet_pton(AF_INET6, ip_.c_str(), &addr_in6->sin6_addr) < 0)
         {
@@ -111,17 +111,18 @@ void InetAddress::GetSockAddr(struct sockaddr *saddr) const
     }
 
     struct sockaddr_in *addr_in = reinterpret_cast<struct sockaddr_in *>(saddr);
-    memset(&addr_in, 0x00, sizeof(addr_in));
+    memset(addr_in, 0x00, sizeof(struct sockaddr_in));
 
     addr_in->sin_family = AF_INET;
-    addr_in->sin_port = 0;
+    addr_in->sin_port =  htons(std::atoi(port_.c_str()));
 
     if (::inet_pton(AF_INET, ip_.c_str(), &addr_in->sin_addr) < 0)
     {
+
     }
 }
 
-bool InetAddress::IsIpV6()
+bool InetAddress::IsIpV6() const
 {
     return is_v6_;
 }

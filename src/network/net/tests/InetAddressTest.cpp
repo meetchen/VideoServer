@@ -1,4 +1,4 @@
-#include "network/net/InetAddress.h"
+#include "network/base/InetAddress.h"
 #include <iostream>
 
 using namespace vdse::network;

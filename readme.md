@@ -23,4 +23,8 @@
 - 完成基于智能指针的时间轮[TimingWheel.h](src/network/net/TimingWheel.h)
     - 使用指针智能析构的时候，调用析构函数，将回调函数放到智能指针的析构函数里面（deque）
     - 使用移动构造函数，避免中间的转换
-
+### 2024-6-25
+- 完成[InetAddress.h](src/network/base/InetAddress.h)即对网络连接中的ip地址端口号，相关的函数进行了封装
+- 完成[SocketOpt.h](src/network/base/SocketOpt.h)，即对socket相关操作进行封装，例如建立socket，监听，接受等等
+- 完成对于以上两个模块的测试[InetAddressTest.cpp](src/network/net/tests/InetAddressTest.cpp)、[SocketOptTest.cpp](src/network/net/tests/SocketOptTest.cpp)
+- 调试bug，少写了个s。。。
