@@ -25,6 +25,11 @@ void TestClient()
     
 }
 
+void TestServer()
+{
+    
+}
+
 
 int main(int argc, char const *argv[])
 {

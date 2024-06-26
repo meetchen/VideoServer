@@ -28,3 +28,7 @@
 - 完成[SocketOpt.h](src/network/base/SocketOpt.h)，即对socket相关操作进行封装，例如建立socket，监听，接受等等
 - 完成对于以上两个模块的测试[InetAddressTest.cpp](src/network/net/tests/InetAddressTest.cpp)、[SocketOptTest.cpp](src/network/net/tests/SocketOptTest.cpp)
 - 调试bug，少写了个s。。。
+
+### 2024-6-26
+- 完成[Connection.h](src/network/net/Connection.h)，继承于Event，可以做为TcpConn等的父类，提供对于链接的管理，激活等操作
+- 开始[TcpConnection.h](src/network/net/TcpConnection.h)，太累了，明天再写。
