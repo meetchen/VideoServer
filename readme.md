@@ -19,7 +19,7 @@
 - 处理bug，包括对于event初始化为-1，导致后续“|”加权限，加不上，无法epoll触发读写事件
 - 使用future primose等完成线程的同步
 ### 2024-6-24
-- 完成对于Eventloop绑定任务的事件，任务队列 TODO : 待捋清楚
+- 完成对于Eventloop绑定任务的事件，任务队列 
 - 完成基于智能指针的时间轮[TimingWheel.h](src/network/net/TimingWheel.h)
     - 使用指针智能析构的时候，调用析构函数，将回调函数放到智能指针的析构函数里面（deque）
     - 使用移动构造函数，避免中间的转换
@@ -28,7 +28,9 @@
 - 完成[SocketOpt.h](src/network/base/SocketOpt.h)，即对socket相关操作进行封装，例如建立socket，监听，接受等等
 - 完成对于以上两个模块的测试[InetAddressTest.cpp](src/network/net/tests/InetAddressTest.cpp)、[SocketOptTest.cpp](src/network/net/tests/SocketOptTest.cpp)
 - 调试bug，少写了个s。。。
-
 ### 2024-6-26
 - 完成[Connection.h](src/network/net/Connection.h)，继承于Event，可以做为TcpConn等的父类，提供对于链接的管理，激活等操作
 - 开始[TcpConnection.h](src/network/net/TcpConnection.h)，太累了，明天再写。
+### 2024-6-26
+- 完成[SocketOptTest.cpp](src/network/net/tests/SocketOptTest.cpp)，中对于server端相关接口测试
+- 完成[Acceptor.h](src/network/net/Acceptor.h)，以及[AcceptorTest.cpp](src/network/net/tests/AcceptorTest.cpp)
