@@ -35,7 +35,7 @@ PipeEvent::~PipeEvent()
 
 void PipeEvent::OnRead() 
 {
-    int64_t temp;
+    int temp;
     auto ret = ::read(fd_, &temp, sizeof(temp));
     if (ret < 0)
     {

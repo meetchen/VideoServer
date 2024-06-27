@@ -78,7 +78,7 @@ void Acceptor::OnRead()
 {
     while(true)
     {
-        int sock = socket_opt_->Accept(addr_);
+        int sock = socket_opt_->Accept(&addr_);
         if (sock > 0)
         {
             if (accept_cb_)

@@ -51,37 +51,37 @@ int SocketOpt::Listen()
     return ::listen(sock_, SOMAXCONN);
 }
 
-int SocketOpt::Accept(InetAddress &perr_addr)
+int SocketOpt::Accept(InetAddress *perr_addr)
 {
     struct sockaddr_in6 addr6;
-    memset(&addr6, 0x00, sizeof(addr6));
-    socklen_t len = sizeof(addr6);
+    socklen_t len = sizeof(struct sockaddr_in6);
 
-    int ret = accept4(sock_,  (struct sockaddr *)&addr6, &len, SOCK_CLOEXEC | SOCK_NONBLOCK);
+    int sock = ::accept4(sock_,  (struct sockaddr *)&addr6, &len, SOCK_CLOEXEC | SOCK_NONBLOCK);
 
-    if (ret <= 0) return ret;
+    if (sock <= 0) return sock;
 
     if (addr6.sin6_family == AF_INET)
     {
         char ip[INET_ADDRSTRLEN] = {0};
-        struct sockaddr_in *addr = (struct sockaddr_in*)&addr;
+        // 将原本假定为ipv6的结构体转化为ipv4 ！！！
+        struct sockaddr_in *addr = (struct sockaddr_in*)&addr6;
         ::inet_ntop(AF_INET, &(addr->sin_addr.s_addr), ip, INET_ADDRSTRLEN);
-        perr_addr.SetAddr(ip);
-        perr_addr.SetPort(ntohs(addr->sin_port));
+        perr_addr->SetAddr(ip);
+        perr_addr->SetPort(ntohs(addr->sin_port));
 
     }
-    else
+    else if (addr6.sin6_family == AF_INET6)
     {
         char ip[INET6_ADDRSTRLEN] = {0};
 
         ::inet_ntop(AF_INET6, &(addr6.sin6_addr), ip, INET6_ADDRSTRLEN);
-        perr_addr.SetAddr(ip);
-        perr_addr.SetPort(ntohs(addr6.sin6_port));
-        perr_addr.SetIsIPV6(true);
+        perr_addr->SetAddr(ip);
+        perr_addr->SetPort(ntohs(addr6.sin6_port));
+        perr_addr->SetIsIPV6(true);
     }
 
 
-    return ret;
+    return sock;
 }
 
 

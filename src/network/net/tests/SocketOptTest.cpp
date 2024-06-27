@@ -27,12 +27,28 @@ void TestClient()
 
 void TestServer()
 {
-    
+    int sock = SocketOpt::CreatNonblockingTcpSocket(AF_INET);
+    if (sock < 0)
+    {
+        std::cerr << "socket failed. sock " << sock << " errno : " << errno << std::endl;
+        return;
+    }
+
+    InetAddress server("0.0.0.0:34444");
+    SocketOpt opt(sock);
+    opt.SetNonBlocking(false);
+    opt.BindAddress(server);
+    opt.Listen();
+    InetAddress addr;
+    auto ret = opt.Accept(&addr);
+    std::cout << "connect ret : " << ret << " errno : " << errno << std::endl
+                << " addr : " << addr.ToIpPort() << std::endl
+                << std::endl;
 }
 
 
 int main(int argc, char const *argv[])
 {
-    TestClient();
+    TestServer();
     return 0;
 }

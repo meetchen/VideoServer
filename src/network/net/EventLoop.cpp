@@ -237,7 +237,7 @@ void EventLoop::WakeUp()
         AddEvent(pipe_event_);
     }
     int msg = 1;
-    pipe_event_->Write(reinterpret_cast<const char *>(&msg), sizeof(msg));
+    pipe_event_->Write((const char *)&msg, sizeof(msg));
 }
 
 void EventLoop::AssertLoopInThread()

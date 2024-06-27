@@ -26,7 +26,7 @@ namespace vdse
 
                 int BindAddress(const InetAddress &localaddr);
                 int Listen();
-                int Accept(InetAddress &peeraddr);
+                int Accept(InetAddress *peeraddr);
 
                 int Connect(const InetAddress &addr);
 
