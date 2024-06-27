@@ -28,18 +28,18 @@ int SocketOpt::CreatNonblockingUdpSocket(int family)
     return ::socket(family, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_UDP);
 }
 
-int SocketOpt::BindAddress(const InetAddressPtr &local_addr)
+int SocketOpt::BindAddress(const InetAddress &local_addr)
 {
-    if (local_addr->IsIpV6())
+    if (local_addr.IsIpV6())
     {
         struct sockaddr_in6 addr6;
-        local_addr->GetSockAddr((struct sockaddr *)&addr6);
+        local_addr.GetSockAddr((struct sockaddr *)&addr6);
         return ::bind(sock_, (struct sockaddr *)&addr6, sizeof(addr6));
     }
     else
     {
         struct sockaddr_in addr;
-        local_addr->GetSockAddr((struct sockaddr *)&addr);
+        local_addr.GetSockAddr((struct sockaddr *)&addr);
         return ::bind(sock_, (struct sockaddr *)&addr, sizeof(addr));
     }
 
@@ -51,7 +51,7 @@ int SocketOpt::Listen()
     return ::listen(sock_, SOMAXCONN);
 }
 
-int SocketOpt::Accept(InetAddressPtr &perr_addr)
+int SocketOpt::Accept(InetAddress &perr_addr)
 {
     struct sockaddr_in6 addr6;
     memset(&addr6, 0x00, sizeof(addr6));
@@ -66,8 +66,8 @@ int SocketOpt::Accept(InetAddressPtr &perr_addr)
         char ip[INET_ADDRSTRLEN] = {0};
         struct sockaddr_in *addr = (struct sockaddr_in*)&addr;
         ::inet_ntop(AF_INET, &(addr->sin_addr.s_addr), ip, INET_ADDRSTRLEN);
-        perr_addr->SetAddr(ip);
-        perr_addr->SetPort(ntohs(addr->sin_port));
+        perr_addr.SetAddr(ip);
+        perr_addr.SetPort(ntohs(addr->sin_port));
 
     }
     else
@@ -75,9 +75,9 @@ int SocketOpt::Accept(InetAddressPtr &perr_addr)
         char ip[INET6_ADDRSTRLEN] = {0};
 
         ::inet_ntop(AF_INET6, &(addr6.sin6_addr), ip, INET6_ADDRSTRLEN);
-        perr_addr->SetAddr(ip);
-        perr_addr->SetPort(ntohs(addr6.sin6_port));
-        perr_addr->SetIsIPV6(true);
+        perr_addr.SetAddr(ip);
+        perr_addr.SetPort(ntohs(addr6.sin6_port));
+        perr_addr.SetIsIPV6(true);
     }
 
 

@@ -24,9 +24,9 @@ namespace vdse
                 static int CreatNonblockingTcpSocket(int family);
                 static int CreatNonblockingUdpSocket(int family);
 
-                int BindAddress(const InetAddressPtr &local_addr);
+                int BindAddress(const InetAddress &localaddr);
                 int Listen();
-                int Accept(InetAddressPtr &perr_addr);
+                int Accept(InetAddress &peeraddr);
 
                 int Connect(const InetAddress &addr);
 
