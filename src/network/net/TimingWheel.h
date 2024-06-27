@@ -58,9 +58,11 @@ namespace vdse
         public:
             TimingWheel();
             ~TimingWheel();
-
+            // 插入delay延迟时间后的，执行时间，智能指针析构后，执行回调
             void InsertEntry(uint32_t delay, EntryPtr entryPtr);
+            // 进行一次计时操作，更新时间轮
             void OnTimer(uint64_t now);
+            // 最终触发智能指针的释放，触发回调
             void PopUp(Wheel &wheel);
 
             void RunAfter(double delay, const Func &cb);

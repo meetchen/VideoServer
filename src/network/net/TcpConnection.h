@@ -15,6 +15,8 @@ namespace vdse
     namespace network
     {   
         class TcpConnection;
+        struct TimeOutEntry;
+        
         using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
 
         struct BufferNode
@@ -29,11 +31,12 @@ namespace vdse
         };
         using BufferNodePtr = std::shared_ptr<BufferNode>;
 
+        
+
         using CloseConnectionCallBack = std::function<void(const TcpConnectionPtr&)>;
         using MsgCallBack = std::function<void(const TcpConnectionPtr&, MsgBuffer &)>;
         using WriteCompleteCallBack = std::function<void(const TcpConnectionPtr&)>;
-
-        
+        using TimeOutCallBack = std::function<void(const TcpConnectionPtr&)>;
 
         class TcpConnection : public Connection
         {
@@ -47,6 +50,7 @@ namespace vdse
                 void OnRead() override;
                 void OnError(const std::string &msg) override;
                 void OnWrite() override;
+                void OnTimeOut(); 
 
                 void SetCloseCallBack(const CloseConnectionCallBack & cb);
                 void SetCloseCallBack(CloseConnectionCallBack &&cb);
@@ -57,8 +61,14 @@ namespace vdse
                 void SetWriteCompleteCallBack(const WriteCompleteCallBack &cb);
                 void SetWriteCompleteCallBack(WriteCompleteCallBack &&cb);
 
+                void SetTimeOutCallBack(int timeout, const TimeOutCallBack &cb);
+                void SetTimeOutCallBack(int timeout, TimeOutCallBack &&cb); 
+
                 void Send(std::list<BufferNodePtr> &list);
                 void Send(const char *buf, size_t size);
+
+
+                void EnableCheckIdleTimeOut(int32_t max_time);
 
 
             private:
@@ -68,10 +78,34 @@ namespace vdse
                 MsgCallBack msg_cb_;
                 WriteCompleteCallBack write_complete_cb_;
                 std::vector<struct iovec> io_vec_list_;
+                std::weak_ptr<TimeOutEntry> timeout_entry_;
+                // 默认超时时间 以秒为单位
+                uint32_t max_idle_time_{30};
 
                 void SendInLoop(std::list<BufferNodePtr> &list);
                 void SendInLoop(const char *buf, size_t size);
 
+                // 延长超时时间
+                void ExtendLife();
+
+        };
+
+        struct TimeOutEntry
+        {   
+            TimeOutEntry(const TcpConnectionPtr& conn):
+            conn_(conn)
+            {
+
+            }
+            ~TimeOutEntry()
+            {
+                auto ptr = conn_.lock();
+                if (ptr)
+                {
+                    ptr->OnTimeOut();
+                }
+            }
+            std::weak_ptr<TcpConnection> conn_;
         };
     }
 }

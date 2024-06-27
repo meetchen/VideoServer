@@ -41,10 +41,14 @@ namespace vdse
 
                 void AssertLoopInThread();
 
+                // 基于时间轮的  
                 void RunAfter(double delay, const Func &cb);
                 void RunAfter(double delay, Func &&cb);
                 void RunEvery(double interval, const Func &cb);
                 void RunEvery(double interval, Func &&cb);
+                 
+                void InsertEntry(uint32_t delay, const EntryPtr& entry);
+                void InsertEntry(uint32_t delay, EntryPtr&& entry);
 
             private:
                 bool looping_{false};
@@ -55,6 +59,7 @@ namespace vdse
                 std::queue<Func> functions_;
                 std::mutex lock_;
                 PipeEventPtr pipe_event_;
+                // 时间轮 定时器
                 TimingWheel timing_wheel_;
         };
 

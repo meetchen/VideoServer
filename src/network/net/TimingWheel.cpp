@@ -75,6 +75,7 @@ void TimingWheel::OnTimer(uint64_t now)
     }
 }
 
+// 最终触发智能指针的释放，触发回调
 void TimingWheel::PopUp(Wheel &wheel)
 {
     WheelEntry we;
@@ -153,3 +154,4 @@ void TimingWheel::InsertDayEntry(uint32_t delay, EntryPtr entryPtr)
     wheels_[kTimingTypeDay][day - 1].emplace(callBackEntryPtr);
 
 }
+

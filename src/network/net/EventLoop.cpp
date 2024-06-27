@@ -306,3 +306,13 @@ void EventLoop::RunEvery(double interval, Func &&cb)
         });
     }
 }
+
+void EventLoop::InsertEntry(uint32_t delay, const EntryPtr& entry)
+{
+    timing_wheel_.InsertEntry(delay, entry);
+}
+
+void EventLoop::InsertEntry(uint32_t delay, EntryPtr&& entry)
+{
+    timing_wheel_.InsertEntry(delay, std::move(entry));
+}
