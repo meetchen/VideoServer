@@ -28,7 +28,7 @@ namespace vdse
                 int Listen();
                 int Accept(InetAddress *peeraddr);
 
-                int Connect(const InetAddress &addr);
+                int Connect(const InetAddress &dist_addr);
 
                 InetAddressPtr GetLocalAddr();
                 InetAddressPtr GetPeerAddr();

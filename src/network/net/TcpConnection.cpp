@@ -21,11 +21,12 @@ void TcpConnection::OnClose()
     loop_ ->AssertLoopInThread();
     if (!closed_)
     {
+        closed_ = true;
         if (close_cb_)
         {
             close_cb_(std::dynamic_pointer_cast<TcpConnection>(shared_from_this()));
         }
-        closed_ = true;
+        Event::Close();
     }
 }
 
@@ -87,6 +88,7 @@ void TcpConnection::OnRead()
                 NETWORK_ERROR << "read err : " << err;
                 OnClose();
             }
+            break;
         }
 
     }
@@ -217,6 +219,14 @@ void TcpConnection::SendInLoop(const char *buf, size_t size)
             len = 0;
         }
         size -= len;
+        if (size == 0)
+        {
+            if (write_complete_cb_)
+            {
+                write_complete_cb_(std::dynamic_pointer_cast<TcpConnection>(shared_from_this()));
+            }
+            return;
+        }
 
     }
     if (size > 0)

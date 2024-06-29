@@ -33,6 +33,7 @@ namespace vdse
                 EventLoop *loop_{nullptr};
                 int fd_{-1};
                 int event_{0};
+                void Close();
 
 
         };

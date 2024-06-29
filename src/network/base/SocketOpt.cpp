@@ -85,12 +85,12 @@ int SocketOpt::Accept(InetAddress *perr_addr)
 }
 
 
-int SocketOpt::Connect(const InetAddress &addr)
+int SocketOpt::Connect(const InetAddress &dist_addr)
 {
 
     struct sockaddr_in6 addr6;
 
-    addr.GetSockAddr((struct sockaddr *)&addr6);
+    dist_addr.GetSockAddr((struct sockaddr *)&addr6);
 
     return ::connect(sock_, (struct sockaddr *)&addr6, sizeof(struct sockaddr_in6));
 

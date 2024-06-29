@@ -1,3 +1,12 @@
+/**
+ * @FilePath     : /VideoServer/src/base/FileMg.cpp
+ * @Description  :  文件管理相关类
+ * @Author       : Duanran 995122760@qq.com
+ * @Version      : 0.0.1
+ * @LastEditors  : Please set LastEditors
+ * @LastEditTime : 2024-06-29 16:15:14
+ * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
+**/
 #include "FileMg.h"
 #include "TTime.h"
 #include "StringUtils.h"
@@ -11,6 +20,11 @@ namespace
     static vdse::base::FileLogPtr file_log_nullptr;
 }
 
+
+/**
+ * @brief        :  
+ * @return        {*}
+**/
 void FileMg::OnCheck()
 {
     bool day_change = false, hour_change = false, minute_change = false;

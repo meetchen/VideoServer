@@ -20,6 +20,11 @@ fd_(fd)
 
 Event::~Event()
 {
+    Close();  
+}
+
+void Event::Close()
+{
     if (fd_ > 0)
     {
         ::close(fd_);

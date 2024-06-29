@@ -1,3 +1,12 @@
+/**
+ * @FilePath     : /VideoServer/src/network/net/EventLoop.cpp
+ * @Description  :  
+ * @Author       : Duanran 995122760@qq.com
+ * @Version      : 0.0.1
+ * @LastEditors  : Duanran 995122760@qq.com
+ * @LastEditTime : 2024-06-29 16:13:25
+ * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
+**/
 #include "EventLoop.h"
 #include "network/base/Network.h"
 #include "Event.h"
@@ -237,7 +246,7 @@ void EventLoop::WakeUp()
         AddEvent(pipe_event_);
     }
     int msg = 1;
-    pipe_event_->Write((const char *)&msg, sizeof(msg));
+    pipe_event_->Write(reinterpret_cast<const char *>(&msg), sizeof(msg));
 }
 
 void EventLoop::AssertLoopInThread()

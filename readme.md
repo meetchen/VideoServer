@@ -34,3 +34,6 @@
 ### 2024-6-26
 - 完成[SocketOptTest.cpp](src/network/net/tests/SocketOptTest.cpp)，中对于server端相关接口测试
 - 完成[Acceptor.h](src/network/net/Acceptor.h)，以及[AcceptorTest.cpp](src/network/net/tests/AcceptorTest.cpp)
+### 2024-6-29
+- 完成[TcpClient.h](src/network/TcpClient.h)、[TcpServer.h](src/network/TcpServer.h)
+- 完成[TcpServerTest.cpp](src/network/net/tests/TcpServerTest.cpp)、[TcpClientTest.cpp](src/network/net/tests/TcpClientTest.cpp)
