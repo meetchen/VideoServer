@@ -14,7 +14,6 @@ namespace vdse
 {
     namespace network
     {   
-        using InetAddressPtr = std::shared_ptr<InetAddress>;
         class SocketOpt
         {
             public:

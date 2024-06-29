@@ -28,3 +28,8 @@ target_link_libraries(TcpClientTest base network)
 add_executable(TcpServerTest TcpServerTest.cpp)
 
 target_link_libraries(TcpServerTest base network)
+
+
+add_executable(DnsServiceTest DnsServiceTest.cpp)
+
+target_link_libraries(DnsServiceTest base network)

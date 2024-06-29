@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <cstdlib>
+#include <memory>
 
 
 namespace vdse
@@ -44,5 +45,8 @@ namespace vdse
                 std::string port_;
                 bool is_v6_{false};
         };
+
+        using InetAddressPtr = std::shared_ptr<InetAddress>;
+
     }
 } 
