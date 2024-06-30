@@ -39,6 +39,9 @@ namespace vdse
 
                  // 传入host 获取ip和端口号
                 void static GetIpAndPort(const std::string &host, std::string &ip, std::string &port);
+                
+                static InetAddress ParseSockAddr(struct sockaddr_in6 * addr);
+
             private:
                 uint32_t IPv4(const char *ip) const;
                 std::string ip_;

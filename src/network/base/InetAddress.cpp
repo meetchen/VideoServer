@@ -171,3 +171,26 @@ bool InetAddress::IsLoopbackIp()
 {
     return ip_ == "127.0.0.1";
 }
+
+InetAddress InetAddress::ParseSockAddr(struct sockaddr_in6 * addr)
+{
+    InetAddress inet_addr;
+    if (addr->sin6_family == AF_INET)
+    {
+        char ip[INET_ADDRSTRLEN] = {0};
+        struct sockaddr_in *temp = (struct sockaddr_in*)&addr;
+        ::inet_ntop(AF_INET, &(temp->sin_addr.s_addr), ip, INET_ADDRSTRLEN);
+        inet_addr.SetAddr(ip);
+        inet_addr.SetPort(ntohs(temp->sin_port));
+    }
+    else if (addr->sin6_family == AF_INET6)
+    {
+        char ip[INET6_ADDRSTRLEN] = {0};
+
+        ::inet_ntop(AF_INET6, &(addr->sin6_addr), ip, INET6_ADDRSTRLEN);
+        inet_addr.SetAddr(ip);
+        inet_addr.SetPort(ntohs(addr->sin6_port));
+        inet_addr.SetIsIPV6(true);
+    }
+    return inet_addr;
+}

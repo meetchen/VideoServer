@@ -15,28 +15,15 @@ namespace vdse
     namespace network
     {   
         class TcpConnection;
-        struct TimeOutEntry;
         
         using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
-
-        struct BufferNode
-        {
-            BufferNode(void *buf, size_t len)
-            :addr(buf), size(len)
-            {
-
-            }
-            void *addr{nullptr};
-            size_t size{0};
-        };
-        using BufferNodePtr = std::shared_ptr<BufferNode>;
-
-        
 
         using CloseConnectionCallBack = std::function<void(const TcpConnectionPtr&)>;
         using MsgCallBack = std::function<void(const TcpConnectionPtr&, MsgBuffer &)>;
         using WriteCompleteCallBack = std::function<void(const TcpConnectionPtr&)>;
         using TimeOutCallBack = std::function<void(const TcpConnectionPtr&)>;
+
+        using BufferNodePtr = std::shared_ptr<BufferNode>;
 
         class TcpConnection : public Connection
         {
@@ -78,7 +65,7 @@ namespace vdse
                 MsgCallBack msg_cb_;
                 WriteCompleteCallBack write_complete_cb_;
                 std::vector<struct iovec> io_vec_list_;
-                std::weak_ptr<TimeOutEntry> timeout_entry_;
+                std::weak_ptr<TimeOutEntry<TcpConnectionPtr>> timeout_entry_;
                 // 默认超时时间 以秒为单位
                 uint32_t max_idle_time_{30};
 
@@ -90,23 +77,7 @@ namespace vdse
 
         };
 
-        struct TimeOutEntry
-        {   
-            TimeOutEntry(const TcpConnectionPtr& conn):
-            conn_(conn)
-            {
 
-            }
-            ~TimeOutEntry()
-            {
-                auto ptr = conn_.lock();
-                if (ptr)
-                {
-                    ptr->OnTimeOut();
-                }
-            }
-            std::weak_ptr<TcpConnection> conn_;
-        };
     }
 }
 

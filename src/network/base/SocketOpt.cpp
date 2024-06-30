@@ -196,3 +196,4 @@ void SocketOpt::SetNonBlocking(bool on)
     }
     ::fcntl(sock_, F_SETFL, flag);
 }
+
