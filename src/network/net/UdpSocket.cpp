@@ -3,7 +3,7 @@
  * @Description  :  imp UdpSocket
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-06-30 13:31:26
+ * @LastEditTime : 2024-06-30 13:54:01
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "network/net/UdpSocket.h"
@@ -79,7 +79,7 @@ void UdpSocket::ExtendLife()
 
 void UdpSocket::EnableCheckIdleTimeOut(int32_t max_time)
 {
-    auto tp = std::make_shared<TimeOutEntry<UdpSocket>>(std::dynamic_pointer_cast<UdpSocket>(shared_from_this()));
+    auto tp = std::make_shared<UdpTimeOutEntry>(std::dynamic_pointer_cast<UdpSocket>(shared_from_this()));
     max_idle_time_ = max_time;
     timeout_entry_ = tp;
     loop_->InsertEntry(max_time, tp);

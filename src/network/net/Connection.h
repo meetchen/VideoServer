@@ -38,28 +38,7 @@ namespace vdse
             size_t size{0};
         };
 
-        /** 提供一个模板，作为子类的的超时回调入口
-         * @brief        :  
-         * @return        {*}
-        **/        
-        template<typename T>
-        struct TimeOutEntry
-        {   
-            TimeOutEntry(const T conn):
-            conn_(conn)
-            {
 
-            }
-            ~TimeOutEntry()
-            {
-                auto ptr = conn_.lock();
-                if (ptr)
-                {
-                    ptr->OnTimeOut();
-                }
-            }
-            std::weak_ptr<T> conn_;
-        };
 
 
         class Connection : public Event
