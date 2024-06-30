@@ -3,7 +3,7 @@
  * @Description  :  负责处理UDP的IO
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-06-30 18:32:46
+ * @LastEditTime : 2024-06-30 18:35:09
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 
@@ -103,6 +103,8 @@ namespace vdse
                 std::weak_ptr<TimeOutEntry<UdpSocket>>  timeout_entry_;
                 MsgBuffer message_buffer_;
                 int32_t message_buffer_size_{65535};
+
+                MsgBuffer message_buffer_;
                 // 接收到消息的回调
                 UdpSocketRecvMessageCallBack message_cb_;
                 UdpSocketCloseConnectionCallBack close_cb_;
