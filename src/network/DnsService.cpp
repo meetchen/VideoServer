@@ -3,7 +3,7 @@
  * @Description  :  管理DNS解析，避免短时间内对于一个域名的重复解析请求
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-06-30 00:33:37
+ * @LastEditTime : 2024-06-30 16:00:25
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "network/DnsService.h"
@@ -160,6 +160,7 @@ void DnsService::GetHostInfo(const std::string &host, std::vector<InetAddressPtr
     for (struct addrinfo *rp = res; rp != nullptr; rp = rp->ai_next)
     {
         InetAddressPtr addr_ptr = std::make_shared<InetAddress>();
+        
         if (rp->ai_family == AF_INET)
         {
             char ip[INET_ADDRSTRLEN] = {0};

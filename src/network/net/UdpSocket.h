@@ -3,7 +3,7 @@
  * @Description  :  负责处理UDP的IO
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-06-30 13:53:39
+ * @LastEditTime : 2024-06-30 18:26:12
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 
@@ -28,8 +28,11 @@ namespace vdse
         using UdpSocketPtr = std::shared_ptr<UdpSocket>;
 
         using UdpSocketRecvMessageCallBack = std::function<void(const InetAddress &addr, MsgBuffer & buff)>;
+
         using UdpSocketWriteCompleteCallBack = std::function<void(const UdpSocketPtr&)>;
+
         using UdpSocketTimeOutCallBack = std::function<void(const UdpSocketPtr&)>;
+        
         using UdpSocketCloseConnectionCallBack = std::function<void(const UdpSocketPtr&)>;
         
 
@@ -98,8 +101,9 @@ namespace vdse
                 bool closed_{false};
                 int32_t max_idle_time_{30};
                 std::weak_ptr<UdpTimeOutEntry>  timeout_entry_;
-                MsgBuffer message_buffer_;
                 int32_t message_buffer_size_{65535};
+
+                MsgBuffer message_buffer_;
                 // 接收到消息的回调
                 UdpSocketRecvMessageCallBack message_cb_;
                 UdpSocketCloseConnectionCallBack close_cb_;

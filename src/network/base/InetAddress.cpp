@@ -175,10 +175,11 @@ bool InetAddress::IsLoopbackIp()
 InetAddress InetAddress::ParseSockAddr(struct sockaddr_in6 * addr)
 {
     InetAddress inet_addr;
+
     if (addr->sin6_family == AF_INET)
     {
         char ip[INET_ADDRSTRLEN] = {0};
-        struct sockaddr_in *temp = (struct sockaddr_in*)&addr;
+        struct sockaddr_in *temp = (struct sockaddr_in*)addr;
         ::inet_ntop(AF_INET, &(temp->sin_addr.s_addr), ip, INET_ADDRSTRLEN);
         inet_addr.SetAddr(ip);
         inet_addr.SetPort(ntohs(temp->sin_port));
