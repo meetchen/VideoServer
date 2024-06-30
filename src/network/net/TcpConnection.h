@@ -67,7 +67,7 @@ namespace vdse
                 MsgCallBack msg_cb_;
                 WriteCompleteCallBack write_complete_cb_;
                 std::vector<struct iovec> io_vec_list_;
-                std::weak_ptr<TcpTimeOutEntry> timeout_entry_;
+                std::weak_ptr<TimeOutEntry<TcpConnection>> timeout_entry_;
                 // 默认超时时间 以秒为单位
                 uint32_t max_idle_time_{30};
 
@@ -79,24 +79,6 @@ namespace vdse
 
         };
 
-        
-        struct TcpTimeOutEntry
-        {   
-            TcpTimeOutEntry(const TcpConnectionPtr& conn):
-            conn_(conn)
-            {
-
-            }
-            ~TcpTimeOutEntry()
-            {
-                auto ptr = conn_.lock();
-                if (ptr)
-                {
-                    ptr->OnTimeOut();
-                }
-            }
-            std::weak_ptr<TcpConnection> conn_;
-        };
     }
 }
 

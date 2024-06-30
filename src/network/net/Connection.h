@@ -39,6 +39,26 @@ namespace vdse
         };
 
 
+        template<typename T>
+        struct TimeOutEntry
+        {   
+            TimeOutEntry(const std::shared_ptr<T>& conn):
+                conn_(conn)
+            {
+
+            }
+
+            ~TimeOutEntry()
+            {
+                auto ptr = conn_.lock();
+                if (ptr)
+                {
+                    ptr->OnTimeOut();
+                }
+            }
+
+            std::weak_ptr<T> conn_;
+        };
 
 
         class Connection : public Event
