@@ -3,11 +3,13 @@
  * @Description  :  imp UdpSocket
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-06-30 14:15:09
+ * @LastEditTime : 2024-06-30 18:30:57
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "network/net/UdpSocket.h"
 #include "network/base/Network.h"
+
+#include <iostream>
 
 using namespace vdse::network;
 
@@ -94,9 +96,10 @@ void UdpSocket::OnTimeOut()
 
 void UdpSocket::OnRead()
 {
+
     if (closed_)
-    {
-        NETWORK_ERROR << " Host : " << peer_addr_.ToIpPort() << " has closed";
+    { 
+        NETWORK_ERROR << " Host : " << peer_addr_.ToIpPort() << " has closed ";
         return;
     }
     ExtendLife();
@@ -105,7 +108,7 @@ void UdpSocket::OnRead()
         struct sockaddr_in6 sock_addr;
         socklen_t len = sizeof(struct sockaddr_in6);
         auto ret = ::recvfrom(fd_, message_buffer_.BeginWrite(), message_buffer_size_, 0,(struct sockaddr *)&sock_addr, &len);
-        if (len > 0)
+        if (ret > 0)
         { 
             auto peerAddr = InetAddress::ParseSockAddr(&sock_addr);
             message_buffer_.HasWritten(ret);
@@ -117,6 +120,7 @@ void UdpSocket::OnRead()
         }
         else if (ret < 0)
         {
+
             if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
             {
                 NETWORK_ERROR << "host: " << peer_addr_.ToIpPort() << " error : " << errno;
@@ -125,6 +129,7 @@ void UdpSocket::OnRead()
                 break;
             }
         }
+
     }
 }
 
@@ -214,7 +219,7 @@ void UdpSocket::SendInLoop(const char *buf, size_t size, struct sockaddr *addr, 
             return;
         }
     }
-    auto node = std::make_shared<UdpBufferNode>(buf, size, addr,len);
+    auto node = std::make_shared<UdpBufferNode>((void *)buf, size, addr,len);
     buffer_list_.emplace_back(node);
     EnableWriting(true);
 }
@@ -222,14 +227,14 @@ void UdpSocket::SendInLoop(const char *buf, size_t size, struct sockaddr *addr, 
 void UdpSocket::Send(std::list<UdpBufferNodePtr> &list)
 {
     loop_->RunInLoop([this, &list](){
-        SendInloop(list);
+        SendInLoop(list);
     });
 }
 
 void UdpSocket::Send(const char *buf, size_t size, struct sockaddr *addr, socklen_t len)
 {
     loop_->RunInLoop([this, buf, size, addr, len](){
-        SendInloop(buf,size,addr,len);
+        SendInLoop(buf,size,addr,len);
     });
 }
 

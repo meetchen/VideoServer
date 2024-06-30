@@ -6,3 +6,4 @@ third_party/*
 lib
 bin/sbin/videoserver
 workLog.md
+.VSCodeCounter/

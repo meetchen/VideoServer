@@ -298,6 +298,7 @@ namespace vdse
             {
                 assert(len <= WritableBytes());
                 tail_ += len;
+                buffer_[tail_] = '\0';
             }
 
             /**
