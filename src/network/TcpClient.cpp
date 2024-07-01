@@ -44,6 +44,8 @@ void TcpClient::ConnectInloop()
 
     EnableWriting(true);
 
+    // EnableCheckIdleTimeOut(3);
+
 
     SocketOpt opt(fd_);
     auto ret = opt.Connect(server_addr_);

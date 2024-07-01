@@ -90,7 +90,7 @@ namespace vdse
                          * dynamic_pointer_cast 的主要作用是将一个基类类型的 std::shared_ptr 转换为派生类类型的 std::shared_ptr。
                          * 如果转换失败，返回的 std::shared_ptr 将为空。
                          */
-                        return std::dynamic_pointer_cast<T>(iter->second);
+                        return std::static_pointer_cast<T>(iter->second);
                     }
                     return std::shared_ptr<T>();
                 }

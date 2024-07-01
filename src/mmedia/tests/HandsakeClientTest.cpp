@@ -1,3 +1,11 @@
+/**
+ * @FilePath     : /VideoServer/src/mmedia/tests/TcpClientTest.cpp
+ * @Description  :  
+ * @Author       : Duanran 995122760@qq.com
+ * @Version      : 0.0.1
+ * @LastEditTime : 2024-07-01 22:52:58
+ * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
+**/
 #include "network/net/Acceptor.h"
 #include "network/net/EventLoop.h"
 #include "network/net/EventLoopThread.h"
@@ -47,9 +55,8 @@ void TestTcpWork()
         client->SetConnectCallBack([](const TcpConnectionPtr& conn, bool connected){
             if (connected)
             {
-                // std::cout << "connected : " << conn->PeerAddr().ToIpPort() << std::endl;
-                auto size = htonl(strlen(http_req));
-                conn->Send((const char *)&size, sizeof(size));
+                std::cout << "connected : " << conn->PeerAddr().ToIpPort() << std::endl;
+
                 conn->Send(http_req, strlen(http_resp));
             }
         });

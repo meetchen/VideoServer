@@ -1,7 +1,11 @@
 
-# add_executable(EventLoopThreadTest EventLoopThreadTest.cpp)
+add_executable(HandsakeClientTest HandsakeClientTest.cpp)
 
-# target_link_libraries(EventLoopThreadTest base network)
+target_link_libraries(HandsakeClientTest base network mmedia )
+
+add_executable(HandsakeServerTest HandsakeServerTest.cpp)
+
+target_link_libraries(HandsakeServerTest base network mmedia )
 
 # add_executable(InetAddressTest InetAddressTest.cpp)
 
@@ -21,14 +25,14 @@
 # target_link_libraries(TcpConnectionTest base network)
 
 
-add_executable(TcpClientTest TcpClientTest.cpp)
+# add_executable(TcpClientTest TcpClientTest.cpp)
 
-target_link_libraries(TcpClientTest base network)
+# target_link_libraries(TcpClientTest base network)
 
 
-add_executable(TcpServerTest TcpServerTest.cpp)
+# add_executable(TcpServerTest TcpServerTest.cpp)
 
-target_link_libraries(TcpServerTest base network)
+# target_link_libraries(TcpServerTest base network)
 
 
 # add_executable(DnsServiceTest DnsServiceTest.cpp)

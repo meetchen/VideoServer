@@ -103,8 +103,6 @@ namespace vdse
                 std::weak_ptr<TimeOutEntry<UdpSocket>>  timeout_entry_;
                 MsgBuffer message_buffer_;
                 int32_t message_buffer_size_{65535};
-
-                MsgBuffer message_buffer_;
                 // 接收到消息的回调
                 UdpSocketRecvMessageCallBack message_cb_;
                 UdpSocketCloseConnectionCallBack close_cb_;
