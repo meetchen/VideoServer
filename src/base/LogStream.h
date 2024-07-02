@@ -5,6 +5,8 @@
 #include <sstream>
 #include <memory>
 
+//TODO Fix Log always display line one
+
 namespace vdse
 {
     namespace base

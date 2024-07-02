@@ -11,7 +11,7 @@
 #pragma once 
 #include "base/LogStream.h"
 #include <iostream>
-using namespace vdse::base;
+
 
 #define RTMP_DEBUG_ON 1
 

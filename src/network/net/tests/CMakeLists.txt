@@ -1,24 +1,24 @@
 
-# add_executable(EventLoopThreadTest EventLoopThreadTest.cpp)
+add_executable(EventLoopThreadTest EventLoopThreadTest.cpp)
 
-# target_link_libraries(EventLoopThreadTest base network)
+target_link_libraries(EventLoopThreadTest base network)
 
-# add_executable(InetAddressTest InetAddressTest.cpp)
+add_executable(InetAddressTest InetAddressTest.cpp)
 
-# target_link_libraries(InetAddressTest base network)
+target_link_libraries(InetAddressTest base network)
 
-# add_executable(SocketOptTest SocketOptTest.cpp)
+add_executable(SocketOptTest SocketOptTest.cpp)
 
-# target_link_libraries(SocketOptTest base network)
+target_link_libraries(SocketOptTest base network)
 
-# add_executable(AcceptorTest AcceptorTest.cpp)
+add_executable(AcceptorTest AcceptorTest.cpp)
 
-# target_link_libraries(AcceptorTest base network)
+target_link_libraries(AcceptorTest base network)
 
 
-# add_executable(TcpConnectionTest TcpConnectionTest.cpp)
+add_executable(TcpConnectionTest TcpConnectionTest.cpp)
 
-# target_link_libraries(TcpConnectionTest base network)
+target_link_libraries(TcpConnectionTest base network)
 
 
 add_executable(TcpClientTest TcpClientTest.cpp)

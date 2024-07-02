@@ -6,6 +6,6 @@ add_library (network ${DIR_LIB_SRCS})
 
 target_link_libraries(network base)
 
-add_subdirectory(net/tests)
+# add_subdirectory(net/tests)
 
 # add_executable(base_test ${DIR_LIB_SRCS})

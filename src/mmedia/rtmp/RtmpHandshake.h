@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 18:57:08
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-02 16:15:22
+ * @LastEditTime: 2024-07-02 16:26:22
  * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpHandshake.h
  * @Description: rtmp握手实现
  * 
@@ -83,9 +83,6 @@ namespace vdse
                 void CreateC2S2(const char *data, int bytes, int offset);
                 bool CheckC2S2(const char *data, int bytes);
                 void SendC2S2();
-
-
-
 
                 inline uint8_t GenRandom() 
                 {
