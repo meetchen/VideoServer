@@ -1,3 +1,13 @@
+<!--
+ * @Author: Duanran 995122760@qq.com
+ * @Date: 2024-06-30 18:27:36
+ * @LastEditors: Duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-02 16:22:47
+ * @FilePath: /VideoServer/readme.md
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+-->
 
 # 流媒体直播系统
 ### 2024-5-30
@@ -41,3 +51,7 @@
 - 完成[UdpSocket.h](src/network/net/UdpSocket.h)、[UdpClient.h](src/network/UdpClient.h)、[UdpServer.h](src/network/UdpServer.h)
 - 完成[UdpServerTest.cpp](src/network/net/tests/UdpServerTest.cpp)、[UdpClientTest.cpp](src/network/net/tests/UdpClientTest.cpp)
 - [network](src/network) 完结💐
+### 2024-7-1
+- [TestContext.h](src/network/TestContext.h),结合TcpConnection完成上下文模块的测试
+- 开启rtmp协议实现模块，[MMediaHandler.h](src/mmedia/base/MMediaHandler.h), 多媒体模块的回调类
+- [RtmpHandshake](src/mmedia/rtmp/RtmpHandshake.h)，Rtmp简单握手与复杂握手的状态机实现
