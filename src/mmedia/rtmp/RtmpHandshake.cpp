@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 19:03:22
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-01 20:04:23
+ * @LastEditTime: 2024-07-02 16:17:11
  * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpHandshake.cpp
  * @Description: Imp RtmpHandshake
  * 
@@ -15,6 +15,7 @@
 #include <string>
 #include <memory>
 #include <cstdint>
+
 
 
 #if OPENSSL_VERSION_NUMBER > 0x10100000L
@@ -227,11 +228,11 @@ int32_t RtmpHandshake::CheckC1S1(const char *data, int bytes)
 
         if (!is_client_)
         {
-            if (!VerifyDigest(hankshake, offset, rtmp_player_key, SERVER_KEY_OPEN_PART_LEN))
+            if (!VerifyDigest(hankshake, offset, rtmp_player_key, PLAYER_KEY_OPEN_PART_LEN))
             {
                 // digset在后的计算方式
                 offset = GetDigestOffset(hankshake, 772, 728);
-                if(!VerifyDigest(hankshake, offset, rtmp_player_key, SERVER_KEY_OPEN_PART_LEN))
+                if(!VerifyDigest(hankshake, offset, rtmp_player_key, PLAYER_KEY_OPEN_PART_LEN))
                 {
                     return -1;
                 }
@@ -239,11 +240,11 @@ int32_t RtmpHandshake::CheckC1S1(const char *data, int bytes)
         }
         else
         {
-            if (!VerifyDigest(hankshake, offset, rtmp_client_ver, PLAYER_KEY_OPEN_PART_LEN))
+            if (!VerifyDigest(hankshake, offset, rtmp_server_key, SERVER_KEY_OPEN_PART_LEN))
             {
                 // digset在后的计算方式
                 offset = GetDigestOffset(hankshake, 772, 728);
-                if(!VerifyDigest(hankshake, offset, rtmp_client_ver, PLAYER_KEY_OPEN_PART_LEN))
+                if(!VerifyDigest(hankshake, offset, rtmp_server_key, SERVER_KEY_OPEN_PART_LEN))
                 {
                     return -1;
                 }
@@ -280,11 +281,11 @@ void RtmpHandshake::CreateC2S2(const char *data, int bytes, int offset)
         uint8_t new_key_from_c1s1_digest[32];
         if (is_client_)
         {
-            CalculateDigest(digest_, 32, 0, rtmp_server_key, sizeof(rtmp_server_key), new_key_from_c1s1_digest);
+            CalculateDigest(digest_, 32, 0, rtmp_player_key, sizeof(rtmp_player_key), new_key_from_c1s1_digest);
         }
         else
         {
-            CalculateDigest(digest_, 32, 0, rtmp_player_key, sizeof(rtmp_player_key), new_key_from_c1s1_digest);
+            CalculateDigest(digest_, 32, 0, rtmp_server_key, sizeof(rtmp_server_key), new_key_from_c1s1_digest);
         }
         CalculateDigest(C2S2_, kRtmpHandshakePacketSize - 32, 0, new_key_from_c1s1_digest, 32, &C2S2_[kRtmpHandshakePacketSize - 32]);
     }
@@ -309,9 +310,12 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
         {
             if (buf.ReadableBytes() < kRtmpHandshakePacketSize + 1)
             {
-                return -1;
+                return 1;
             }
+            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", recv C0C1 \n"; 
+
             auto offset = CheckC1S1(buf.Peek(), kRtmpHandshakePacketSize + 1);
+
             if (offset >= 0)
             {
                 CreateC2S2(buf.Peek() + 1, kRtmpHandshakePacketSize, offset);
@@ -321,7 +325,7 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
             }
             else
             {
-                RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", check C0C1 error";
+                RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", check C0C1 error\n";
                 return -1;
             }
             break;
@@ -332,16 +336,17 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
             {
                 return -1;
             }
-            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", recv c2 ";
+            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", recv c2 \n";
             if (CheckC2S2(buf.Peek(), kRtmpHandshakePacketSize))
             {
                 buf.Retrieve(kRtmpHandshakePacketSize);
-                RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", done. ";
+                RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", done. \n";
                 state_ = KHandshakeDone;
+                return 0;
             }
             else
             {   
-                RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", check C2 error";
+                RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", check C2 error\n";
                 return -1;
             }
             break;
@@ -351,9 +356,9 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
         {
             if (buf.ReadableBytes() < kRtmpHandshakePacketSize + 1)
             {
-                return -1;
+                return 1;
             }
-            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", recv SOS1 ";
+            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", recv SOS1 \n";
 
             auto offset = CheckC1S1(buf.Peek(), kRtmpHandshakePacketSize + 1);
             if (offset >= 0)
@@ -363,17 +368,21 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
                 // 在接受到S0S1的同时接受到了S2
                 if (buf.ReadableBytes() == 1536)
                 {
+                    RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", recv S2 \n";
                     state_ = KHandshakeDoning;
+                    buf.Retrieve(kRtmpHandshakePacketSize);
                     SendC2S2();
-                    return 2;
+                    return 0;
                 }
-            
-                state_ = KHandshakePostC2;
-                SendC2S2();
+                else
+                {
+                    state_ = KHandshakePostC2;
+                    SendC2S2();
+                }
             }
             else
             {
-                RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", check SOS1 error";
+                RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", check SOS1 error\n";
                 return -1;
             }
             break;
@@ -384,11 +393,13 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
 
 void RtmpHandshake::WriteComplete()
 {
+    // RTMP_TRACE << " state_ =  " << state_ ;
+    
     switch(state_)
     {
         case KHandshakePostS0S1:
         {
-            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostS0S1";
+            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostS0S1\n";
 
             state_ = KHandshakePostS2;
             SendC2S2();
@@ -396,29 +407,29 @@ void RtmpHandshake::WriteComplete()
         }
         case KHandshakePostS2:
         {
-            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostS2";
+            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostS2\n";
 
             state_ = KHandshakeWaitC2;
             break;
         }
         case KHandshakePostC0C1:
         {
-            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostC0C1";
+            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostC0C1\n";
 
             state_ = KHandshakeWaitS0S1;
             break;
         }
         case KHandshakePostC2:
         {
-            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostC2";
+            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostC2. Done\n";
 
-            state_ =KHandshakeDone;
+            state_ = KHandshakeDone;
             break;
         }
         case KHandshakeDoning:
         {
-            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostC2";
-            state_ =KHandshakeDone;
+            RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostC2, Done \n";
+            state_ = KHandshakeDone;
             break;
         }
     }

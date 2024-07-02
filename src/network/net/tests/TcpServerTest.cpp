@@ -3,7 +3,7 @@
  * @Description  :  
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-07-02 00:14:53
+ * @LastEditTime : 2024-07-02 08:33:42
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "network/net/EventLoop.h"
@@ -17,9 +17,8 @@ using namespace vdse::network;
 
 EventLoopThread eventloop_thread;
 std::thread th;
-const char *http_resp = "HTTP/1.0 200 OK\r\nDate:Mon,31Dec200104:25:57GMT\r\nServer:Apache/1.3.14(Unix) \r\nContent-type:text/html \r\nLast-modified:Tue,17Apr200106:46:28GMT \r\n Content-length:0 \r\n\r\n" ;
 
-
+const char *http_resp="HTTP/1.0 200 OK\r\nServer: vdse\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
 
 int main(int argc, char const *argv[])
 {
@@ -34,19 +33,25 @@ int main(int argc, char const *argv[])
 
         // 设置接受到消息时候的回调
         server.SetMsgCallBack([](const TcpConnectionPtr &conn, MsgBuffer &buf){
+            // std::string tmp;
+            // tmp.assign(buf.Peek(), buf.ReadableBytes());
+            // std::cout << " info : " << tmp << std::endl;
             TestContextPtr context = conn->GetContext<TestContext>(kNormalContext);
             context->ParseMessage(buf);
         });
 
         // 设置检测到新链接时候的回调
         server.SetNewConnecitonCallBack([&loop](const TcpConnectionPtr &conn){
+            
+            std::cout << "new connection : " << conn->PeerAddr().ToIpPort() << std::endl;
+
             TestContextPtr context = std::make_shared<TestContext>(conn);
+            conn -> SetContext(kNormalContext, context);
 
             context->SetTestMessageCallBack([](const TcpConnectionPtr&conn, const std::string msg){
                 std::cout << "messgae : \n" << msg << std::endl;
             });
 
-            conn->SetContext(kNormalContext, context);
             conn -> SetWriteCompleteCallBack([&loop](const TcpConnectionPtr &conn){
                 std::cout << "write complete host " << conn->PeerAddr().ToIpPort() << std::endl;
                 // conn->ForceClose();

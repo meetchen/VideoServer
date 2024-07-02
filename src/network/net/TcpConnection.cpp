@@ -65,6 +65,8 @@ void TcpConnection::OnRead()
         return;
     }
 
+    ExtendLife();
+
     while (true)
     {
         int err = 0;
@@ -108,6 +110,8 @@ void TcpConnection::OnWrite()
         return;
     }
 
+    ExtendLife();
+
     if (!io_vec_list_.empty())
     {
         while (true)
@@ -131,20 +135,31 @@ void TcpConnection::OnWrite()
                         io_vec_list_.erase(io_vec_list_.begin());
                     }
                 }
-            
+                if (io_vec_list_.empty())
+                {
+                    EnableWriting(false);
+                    if (write_complete_cb_)
+                    {
+                        write_complete_cb_(std::dynamic_pointer_cast<TcpConnection>(shared_from_this()));
+                    }
+                }
             }
-            if (io_vec_list_.empty())
+            else
             {
-                EnableWriting(false);
-                write_complete_cb_(std::dynamic_pointer_cast<TcpConnection>(shared_from_this()));
+                if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
+                {
+                    NETWORK_ERROR << "host:" << peer_addr_.ToIpPort() << " write err:" << errno;
+                    OnClose();
+                    return;
+                }
             }
         }
     }
     else
     {
-        if (io_vec_list_.empty())
+        EnableWriting(false);
+        if (write_complete_cb_)
         {
-            EnableWriting(false);
             write_complete_cb_(std::dynamic_pointer_cast<TcpConnection>(shared_from_this()));
         }
     }
@@ -215,6 +230,7 @@ void TcpConnection::SendInLoop(const char *buf, size_t size)
             {
                 NETWORK_ERROR << "read err : " << errno;
                 OnClose();
+                return;
             }
             len = 0;
         }

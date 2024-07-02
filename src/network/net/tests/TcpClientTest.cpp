@@ -10,9 +10,8 @@ using namespace vdse::network;
 EventLoopThread eventloop_thread;
 std::thread th;
 
-const char* http_req = "GET / HTTP/1.0\r\nHost: 192.168.159.131\r\nAccept: */*\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
-
-const char *http_resp = "HTTP/1.0 200 OK\r\nDate:Mon,31Dec200104:25:57GMT\r\nServer:Apache/1.3.14(Unix) \r\nContent-type:text/html \r\nLast-modified:Tue,17Apr200106:46:28GMT \r\n Content-length:0 \r\n\r\n" ;
+const char *http_req="GET / HTTP/1.0\r\nHost: 192.168.159.131\r\nAccept: */*\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
+const char *http_resp="HTTP/1.0 200 OK\r\nServer: vdse\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
 
 void TestTcpWork()
 {
@@ -47,10 +46,9 @@ void TestTcpWork()
         client->SetConnectCallBack([](const TcpConnectionPtr& conn, bool connected){
             if (connected)
             {
-                // std::cout << "connected : " << conn->PeerAddr().ToIpPort() << std::endl;
                 auto size = htonl(strlen(http_req));
                 conn->Send((const char *)&size, sizeof(size));
-                conn->Send(http_req, strlen(http_resp));
+                conn->Send(http_req, strlen(http_req));
             }
         });
 

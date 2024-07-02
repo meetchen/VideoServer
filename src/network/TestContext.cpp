@@ -1,14 +1,15 @@
 /**
  * @FilePath     : /VideoServer/src/network/TestContext.cpp
- * @Description  :  
+ * @Description  :  保存上下文
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-07-02 00:13:24
+ * @LastEditTime : 2024-07-02 08:42:49
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "network/TestContext.h"
 #include <iostream>
-
+#include <network/base/Network.h>
+#include <string>
 
 using namespace vdse::network;
 
@@ -48,6 +49,10 @@ int TestContext::ParseMessage(MsgBuffer &buf)
                     message_body_.clear();
                 }
                 state_ = kTestContextHeader;
+            }
+            else
+            {
+                NETWORK_ERROR << "kTestContextBody : " << buf.ReadableBytes() << " message_length_ : " << std::to_string(message_length_);
             }
         }
     }

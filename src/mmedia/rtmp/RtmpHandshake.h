@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 18:57:08
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-01 19:41:46
+ * @LastEditTime: 2024-07-02 16:15:22
  * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpHandshake.h
  * @Description: rtmp握手实现
  * 
@@ -54,7 +54,9 @@ namespace vdse
                  * @return        {*} 0:握手成功， 1:表示还有更多数据 2:正在完成握手 -1:出错
                 **/                
                 int32_t Handshake(MsgBuffer &buf);
-                
+
+                void WriteComplete();
+
             private:
                 TcpConnectionPtr connection_;
                 bool is_client_{true};
@@ -84,7 +86,6 @@ namespace vdse
 
 
 
-                void WriteComplete();
 
                 inline uint8_t GenRandom() 
                 {
@@ -92,5 +93,6 @@ namespace vdse
                 }
 
         };
+
     }
 }
