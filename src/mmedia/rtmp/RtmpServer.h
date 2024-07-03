@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-02 19:18:50
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-02 20:03:50
+ * @LastEditTime: 2024-07-03 15:31:41
  * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpServer.h
  * @Description: Rtmp的服务端，继承TcpServer，组合RtmpHandler对上层进行回调
  * 
@@ -13,6 +13,7 @@
 #include "network/TcpServer.h"
 #include "mmedia/rtmp/RtmpHandler.h"
 #include "mmedia/rtmp/RtmpHandshake.h"
+#include "mmedia/rtmp/RtmpContext.h"
 
 
 namespace vdse
@@ -38,5 +39,6 @@ namespace vdse
                 RtmpHandler *rtmp_handler_{nullptr};
 
         };
+
     }
 }

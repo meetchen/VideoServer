@@ -1,3 +1,13 @@
+/*
+ * @Author: Duanran 995122760@qq.com
+ * @Date: 2024-07-02 22:11:22
+ * @LastEditors: Duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-03 14:18:14
+ * @FilePath: /VideoServer/src/mmedia/base/BytesReader.h
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ */
 #pragma once
 #include <stdint.h>
 

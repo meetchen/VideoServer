@@ -1,18 +1,11 @@
-/**
- * @FilePath     : /VideoServer/src/mmedia/tests/RtmpServerTest.cpp
- * @Description  :  
- * @Author       : Duanran 995122760@qq.com
- * @Version      : 0.0.1
- * @LastEditTime : 2024-07-02 21:38:47
- * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
-**/
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 22:53:04
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-02 15:48:01
- * @FilePath: /VideoServer/src/mmedia/tests/HandsakeServerTest.cpp
- * @Description: rtmp 握手实现 测试 fmpeg -i ~/Downloads/test.mp4 -c:v copy -c:a copy -f flv rtmp://192.168.159.131:1935/U
+ * @LastEditTime: 2024-07-03 15:38:35
+ * @FilePath: /VideoServer/src/mmedia/tests/RtmpServerTest.cpp
+ * @Description: rtmp 握手实现 测试 
+ *               ffmpeg -i ~/Downloads/test.mp4 -c:v copy -c:a copy -f flv rtmp://192.168.159.131:1935/U
  * 
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */

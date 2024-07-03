@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 16:45:59
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-01 17:42:13
+ * @LastEditTime: 2024-07-03 16:22:26
  * @FilePath: /VideoServer/src/mmedia/base/Packet.h
  * @Description: 用于表示各类数据包、音频包、视频包、Meta包、等其他数据包
  * 
@@ -67,7 +67,7 @@ namespace vdse
                     return type_ == kPacktorTypeMeta3;
                 }
                 
-                inline int32_t PackSize() const
+                inline int32_t PacketSize() const
                 {
                     return size_;
                 }

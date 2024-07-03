@@ -1,11 +1,13 @@
-/**
- * @FilePath     : /VideoServer/src/mmedia/base/BytesReader.cpp
- * @Description  :  从网络数据里读整形的值
- * @Author       : Duanran 995122760@qq.com
- * @Version      : 0.0.1
- * @LastEditTime : 2024-07-02 22:12:58
- * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
-**/
+/*
+ * @Author: Duanran 995122760@qq.com
+ * @Date: 2024-07-02 22:11:21
+ * @LastEditors: Duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-03 14:25:19
+ * @FilePath: /VideoServer/src/mmedia/base/BytesReader.cpp
+ * @Description: 从网络字节顺序转换为主机字节顺序 大端 （逆序） -》 小端 （低地址低低内容 正序）
+ * 
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ */
 #include "mmedia/base/BytesReader.h"
 #include <cstdint>
 #include <netinet/in.h>
@@ -25,6 +27,7 @@ uint64_t BytesReader::ReadUint64T(const char *data)
 uint32_t BytesReader::ReadUint32T(const char *data)
 {
     uint32_t *c = (uint32_t *) data;
+    // ntohl()将一个无符号长整形数从网络字节顺序转换为主机字节顺序
     return ntohl(*c);
 }
 

@@ -1,11 +1,13 @@
-/**
- * @FilePath     : /VideoServer/src/mmedia/rtmp/RtmpContext.h
- * @Description  :  Rtmp 消息解析, 作为一个上下文对象配合后续解析
- * @Author       : Duanran 995122760@qq.com
- * @Version      : 0.0.1
- * @LastEditTime : 2024-07-02 23:14:45
- * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
-**/
+/*
+ * @Author: Duanran 995122760@qq.com
+ * @Date: 2024-07-02 22:26:16
+ * @LastEditors: Duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-03 15:32:28
+ * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpContext.h
+ * @Description: Rtmp 消息解析, 作为一个上下文对象配合后续解析
+ * 
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ */
 
 #pragma once
 #include "mmedia/rtmp/RtmpHandshake.h"
@@ -13,6 +15,7 @@
 #include "mmedia/base/Packet.h"
 #include "mmedia/rtmp/RtmpHandler.h"
 #include <unordered_map>
+#include <memory>
 
 namespace vdse
 {
@@ -46,11 +49,16 @@ namespace vdse
                 uint8_t state_{kRtmpHandshake};
                 RtmpHandshake handshake_;
                 RtmpHandler *rtmp_handler_{nullptr};
+                // 上一个chunk stream id， csid， 的消息头 下同
                 std::unordered_map<uint32_t, RtmpMsgHeaderPtr> in_message_headers_;
+                // 保存与上一个时间戳的差值
                 std::unordered_map<uint32_t, uint32_t> in_deltas_;
-                std::unordered_map<uint32_t, PacketPtr> in_message_headers_;
+                std::unordered_map<uint32_t, PacketPtr> in_packet_;
+                // 
                 std::unordered_map<uint32_t, bool> in_ext_;
+                int in_chunk_size_{128};
             
         };
+        using RtmpContextPtr = std::shared_ptr<RtmpContext>;
     }
 }
