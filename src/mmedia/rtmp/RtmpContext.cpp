@@ -3,18 +3,20 @@
  * @Description  :  Imp RtmpContext
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-07-03 09:28:14
+ * @LastEditTime : 2024-07-04 09:18:02
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 
 #include "mmedia/rtmp/RtmpContext.h"
 #include "mmedia/base/MMediaLog.h"
-#include "mmedia/base/BytesReader.h"
+#include "mmedia/base/BytesReader.h" 
+#include "mmedia/base/BytesWriter.h"
+#include "mmedia/rtmp/amf/AMFObject.h"
 
 using namespace vdse::mmedia;
 
-RtmpContext::RtmpContext(const TcpConnectionPtr &conn, RtmpHandler *hanlder, bool client)
-:conneciton_(conn), handshake_(conn, client), rtmp_handler_(hanlder)
+RtmpContext::RtmpContext(const TcpConnectionPtr &conn, RtmpCallBack *hanlder, bool client)
+:connection_(conn), handshake_(conn, client), rtmp_callback_(hanlder)
 {
 
 }
@@ -30,7 +32,7 @@ int32_t RtmpContext::Parse(MsgBuffer &buf)
     {
         ret = handshake_.Handshake(buf);
         if (ret == 0)
-        {
+        { 
             state_ = kRtmpMessage;
             if (buf.ReadableBytes() > 0)
             {
@@ -52,7 +54,9 @@ int32_t RtmpContext::Parse(MsgBuffer &buf)
     }
     else if (state_ == kRtmpMessage)
     {
-        return ParseMessage(buf);
+        auto r = ParseMessage(buf);
+        last_left_ = buf.ReadableBytes();
+        return r;
     }  
 
     return ret;
@@ -87,6 +91,8 @@ int32_t RtmpContext::ParseMessage(MsgBuffer &buf)
     uint32_t total_bytes = buf.ReadableBytes();
     int32_t parsed = 0;
     
+    in_bytes_ += (buf.ReadableBytes() - last_left_);
+    SentBytesRecv();
 
     while (total_bytes > 1)
     {
@@ -281,4 +287,708 @@ int32_t RtmpContext::ParseMessage(MsgBuffer &buf)
 void RtmpContext::MessageComplete(PacketPtr &&data)
 {
     RTMP_TRACE << "recv message type " << data -> PacketType() << " len: " << data -> PacketSize() << std::endl;
+    auto type = data -> PacketType();
+    switch (type)
+    {
+        case kRtmpMsgTypeChunkSize:
+        {
+            HandleChunkSize(data);
+            break;
+        }
+        case kRtmpMsgTypeBytesRead:
+        {
+            RTMP_TRACE << "message bytes read recv.";
+            break;
+        }        
+        case kRtmpMsgTypeUserControl:
+        {
+            HandleUserMessage(data);
+            break;
+        }
+        case kRtmpMsgTypeWindowACKSize:
+        {
+            HandleAckWindowSize(data);
+            break;
+        }
+        case kRtmpMsgTypeAMF3Message:
+        {
+            HandleAMFMessage(data, true);
+            break;
+        }
+        case kRtmpMsgTypeAMFMessage:
+        {
+            HandleAMFMessage(data, false);
+            break;
+        }
+        default:
+        {
+            RTMP_ERROR << " not surpport message type:" << type;
+            break;
+        }
+            
+    }
+}
+
+
+bool RtmpContext::BuildChunk(const PacketPtr &packet, uint32_t timestamp, bool fmt0)
+{
+    // 获取头部
+    auto header = packet->Ext<RtmpMsgHeader>();
+
+    if (!header) return false;
+
+    out_sending_packets_.emplace_back(packet);
+    
+    auto& pre = out_message_headers_[header -> cs_id];
+
+    // 是否是具有时间间隔， 
+    /**
+     * 1、 fmt0不具有  时间差
+     * 2、 有时间差， 必须有前一个节点，这样才能计算时间差
+     * 3、 时间戳必须必之前一个时间戳大
+     * 4、 得是同一个 数据流的
+     */
+    bool is_deltal = !fmt0 && !pre && timestamp >= pre -> timestamp && header -> msg_sid == pre -> msg_sid;
+
+    if (pre)
+    {
+        pre = std::make_shared<RtmpMsgHeader>();
+    }
+
+    // 先确定是fmt 0123
+    int fmt = kRtmpFmt0;
+    if (is_deltal)
+    {
+        fmt = kRtmpFmt1;
+        // 长度 和 类型相同
+        if (header -> msg_len == pre -> msg_len && header -> msg_type == pre -> msg_type)
+        {
+            fmt = kRtmpFmt2;
+            // deltas 相同
+            timestamp -= pre -> timestamp;
+            if (out_deltas_[header -> cs_id] == timestamp)
+            {
+                fmt = kRtmpFmt3;
+            }
+        }
+    }
+
+    // 开始填充缓冲区的数据 
+    char *p = out_current_;
+
+    // 填入 fmt 和 csid
+    if (header -> cs_id < 64)
+    {
+        *p++ = (char)((fmt << 6) | header -> cs_id);
+    }
+    else if (header -> cs_id < 64 + 256)
+    {
+        *p++ = (char)(fmt << 6);
+        *p++ = (char)(header -> cs_id - 64);
+    }
+    else
+    {
+        *p++ = (char)((fmt << 6) | 1);
+        uint16_t temp = header -> cs_id - 64;
+        memcpy(p, &temp, 2);
+        p += 2;
+    }
+
+
+    // 此时ts已经是上个与上一个chunk的timestamp的差值
+    auto ts = timestamp;
+    if (timestamp >= 0xffffff)
+    {
+        ts = 0xffffff;
+    }
+
+    // 按不同的fmt 开始填写数据
+    if (fmt == kRtmpFmt0)
+    {
+        p += BytesWriter::WriteUint24T(p, ts);
+        p += BytesWriter::WriteUint24T(p, header -> msg_len);
+        p += BytesWriter::WriteUint8T(p, header -> msg_type);
+        memcpy(p, &header -> msg_sid, 4);
+        p += 4;
+        out_deltas_[header -> cs_id] = 0;
+    }
+    else if (fmt == kRtmpFmt1)
+    {
+        p += BytesWriter::WriteUint24T(p, ts);
+        p += BytesWriter::WriteUint24T(p, header -> msg_len);
+        p += BytesWriter::WriteUint8T(p, header -> msg_type);
+        out_deltas_[header -> cs_id] = timestamp;
+    }
+    else if (fmt == kRtmpFmt2)
+    {
+        p += BytesWriter::WriteUint24T(p, ts);
+        out_deltas_[header -> cs_id] = timestamp;
+    }
+    else if (fmt == kRtmpFmt3)
+    {
+        
+    }
+
+    // 如果有time delta ，则进行填写
+    if (timestamp >= 0xffffff)
+    {
+        memcpy(p, &timestamp, 4);
+        p += 4;
+    }
+
+    // 先发送头部数据
+    auto nheader = std::make_shared<BufferNode>(out_buffer_, p - out_current_);
+    sending_bufs_.push_back(std::move(nheader));
+    out_current_ = p;
+
+    // 更新前一个信息
+    pre -> cs_id = header -> cs_id;
+    pre -> msg_len = header -> msg_len;
+    pre -> msg_sid = header -> msg_sid;
+    pre -> msg_type = header -> msg_type;
+
+    if (fmt == kRtmpFmt0)
+    {
+        pre -> timestamp = timestamp;
+    }
+    else
+    {
+        pre -> timestamp += timestamp;
+    }
+
+    // 准备发送消息体
+    const char *body = packet -> Data();
+    int32_t bytes_parsed = 0;
+
+    while (true)
+    {
+        // 此次数据写入的地址
+        const char * dest = body + bytes_parsed;
+
+        // 此次数据写入的长度
+        int32_t size = header -> msg_len - bytes_parsed;
+
+        // 每次写的最大数据不能超过out_chunk_size_
+        size = std::min(size, out_chunk_size_);
+
+        auto node = std::make_shared<BufferNode>((void *)dest, size);
+        // 将数据放置到发送队列
+        sending_bufs_.push_back(std::move(node));
+
+        if (bytes_parsed >= header -> msg_len)
+        {
+            break;
+        }
+
+        if (out_current_ - out_buffer_ > MESSAGE_CHUNK_SIZE)
+        {
+            RTMP_ERROR << "rtmp had no enough buff";
+            break;
+        }
+        char *p = out_current_;
+
+        // 发送一个头部 fmt3
+        // 填入 fmt 和 csid
+        if (header -> cs_id < 64)
+        {
+            *p++ = (char)((fmt << 6) | header -> cs_id);
+        }
+        else if (header -> cs_id < 64 + 256)
+        {
+            *p++ = (char)(fmt << 6);
+            *p++ = (char)(header -> cs_id - 64);
+        }
+        else
+        {
+            *p++ = (char)((fmt << 6) | 1);
+            uint16_t temp = header -> cs_id - 64;
+            memcpy(p, &temp, 2);
+            p += 2;
+        }
+        
+        if (timestamp >= 0xffffff)
+        {
+            memcpy(p, &timestamp, 4);
+            p += 4;
+        }
+        
+        auto nheader = std::make_shared<BufferNode>(out_current_, p - out_current_);
+        sending_bufs_.push_back(std::move(nheader));
+
+        out_current_ = p;
+   
+    }
+    return true;
+    
+}
+
+void RtmpContext::Send()
+{
+    if (sending_)
+    {
+        return;
+    }
+    sending_ = true;
+
+    for (int i = 0; i < 10; i++)
+    {
+        if (out_waiting_queue.empty())
+        {
+            break;
+        }
+        BuildChunk(std::move(out_waiting_queue.front()));
+        out_waiting_queue.pop_front(); 
+    }
+    connection_->Send(sending_bufs_);
+}
+
+bool RtmpContext::Ready() const
+{
+    return !sending_;
+}
+
+
+bool RtmpContext::BuildChunk(PacketPtr &&packet, uint32_t timestamp, bool fmt0)
+{
+    // 获取头部
+    auto header = packet->Ext<RtmpMsgHeader>();
+
+    if (!header) return false;
+
+    
+    auto& pre = out_message_headers_[header -> cs_id];
+
+    // 是否是具有时间间隔， 
+    /**
+     * 1、 fmt0不具有  时间差
+     * 2、 有时间差， 必须有前一个节点，这样才能计算时间差
+     * 3、 时间戳必须必之前一个时间戳大
+     * 4、 得是同一个 数据流的
+     */
+    bool is_deltal = !fmt0 && !pre && timestamp >= pre -> timestamp && header -> msg_sid == pre -> msg_sid;
+
+    if (pre)
+    {
+        pre = std::make_shared<RtmpMsgHeader>();
+    }
+
+    // 先确定是fmt 0123
+    int fmt = kRtmpFmt0;
+    if (is_deltal)
+    {
+        fmt = kRtmpFmt1;
+        // 长度 和 类型相同
+        if (header -> msg_len == pre -> msg_len && header -> msg_type == pre -> msg_type)
+        {
+            fmt = kRtmpFmt2;
+            // deltas 相同
+            timestamp -= pre -> timestamp;
+            if (out_deltas_[header -> cs_id] == timestamp)
+            {
+                fmt = kRtmpFmt3;
+            }
+        }
+    }
+
+    // 开始填充缓冲区的数据 
+    char *p = out_current_;
+
+    // 填入 fmt 和 csid
+    if (header -> cs_id < 64)
+    {
+        *p++ = (char)((fmt << 6) | header -> cs_id);
+    }
+    else if (header -> cs_id < 64 + 256)
+    {
+        *p++ = (char)(fmt << 6);
+        *p++ = (char)(header -> cs_id - 64);
+    }
+    else
+    {
+        *p++ = (char)((fmt << 6) | 1);
+        uint16_t temp = header -> cs_id - 64;
+        memcpy(p, &temp, 2);
+        p += 2;
+    }
+
+
+    // 此时ts已经是上个与上一个chunk的timestamp的差值
+    auto ts = timestamp;
+    if (timestamp >= 0xffffff)
+    {
+        ts = 0xffffff;
+    }
+
+    // 按不同的fmt 开始填写数据
+    if (fmt == kRtmpFmt0)
+    {
+        p += BytesWriter::WriteUint24T(p, ts);
+        p += BytesWriter::WriteUint24T(p, header -> msg_len);
+        p += BytesWriter::WriteUint8T(p, header -> msg_type);
+        memcpy(p, &header -> msg_sid, 4);
+        p += 4;
+        out_deltas_[header -> cs_id] = 0;
+    }
+    else if (fmt == kRtmpFmt1)
+    {
+        p += BytesWriter::WriteUint24T(p, ts);
+        p += BytesWriter::WriteUint24T(p, header -> msg_len);
+        p += BytesWriter::WriteUint8T(p, header -> msg_type);
+        out_deltas_[header -> cs_id] = timestamp;
+    }
+    else if (fmt == kRtmpFmt2)
+    {
+        p += BytesWriter::WriteUint24T(p, ts);
+        out_deltas_[header -> cs_id] = timestamp;
+    }
+    else if (fmt == kRtmpFmt3)
+    {
+        
+    }
+
+    // 如果有time delta ，则进行填写
+    if (timestamp >= 0xffffff)
+    {
+        memcpy(p, &timestamp, 4);
+        p += 4;
+    }
+
+    // 先发送头部数据
+    auto nheader = std::make_shared<BufferNode>(out_buffer_, p - out_current_);
+    sending_bufs_.push_back(std::move(nheader));
+    out_current_ = p;
+
+    // 更新前一个信息
+    pre -> cs_id = header -> cs_id;
+    pre -> msg_len = header -> msg_len;
+    pre -> msg_sid = header -> msg_sid;
+    pre -> msg_type = header -> msg_type;
+
+    if (fmt == kRtmpFmt0)
+    {
+        pre -> timestamp = timestamp;
+    }
+    else
+    {
+        pre -> timestamp += timestamp;
+    }
+
+    // 准备发送消息体
+    const char *body = packet -> Data();
+    int32_t bytes_parsed = 0;
+
+    while (true)
+    {
+        // 此次数据写入的地址
+        const char * dest = body + bytes_parsed;
+
+        // 此次数据写入的长度
+        int32_t size = header -> msg_len - bytes_parsed;
+
+        // 每次写的最大数据不能超过out_chunk_size_
+        size = std::min(size, out_chunk_size_);
+
+        auto node = std::make_shared<BufferNode>((void *)dest, size);
+        // 将数据放置到发送队列
+        sending_bufs_.push_back(std::move(node));
+
+        if (bytes_parsed >= header -> msg_len)
+        {
+            break;
+        }
+
+        if (out_current_ - out_buffer_ > MESSAGE_CHUNK_SIZE)
+        {
+            RTMP_ERROR << "rtmp had no enough buff";
+            break;
+        }
+        char *p = out_current_;
+
+        // 发送一个头部 fmt3
+        // 填入 fmt 和 csid
+        if (header -> cs_id < 64)
+        {
+            *p++ = (char)((fmt << 6) | header -> cs_id);
+        }
+        else if (header -> cs_id < 64 + 256)
+        {
+            *p++ = (char)(fmt << 6);
+            *p++ = (char)(header -> cs_id - 64);
+        }
+        else
+        {
+            *p++ = (char)((fmt << 6) | 1);
+            uint16_t temp = header -> cs_id - 64;
+            memcpy(p, &temp, 2);
+            p += 2;
+        }
+        
+        if (timestamp >= 0xffffff)
+        {
+            memcpy(p, &timestamp, 4);
+            p += 4;
+        }
+        
+        auto nheader = std::make_shared<BufferNode>(out_current_, p - out_current_);
+        sending_bufs_.push_back(std::move(nheader));
+
+        out_current_ = p;
+   
+    }
+    out_sending_packets_.push_back(std::move(packet));
+
+    return true;
+}
+
+void RtmpContext::CheckAfterSend()
+{
+    sending_ = false;
+    out_current_ = out_buffer_;
+    sending_bufs_.clear();
+    out_sending_packets_.clear();
+
+    if (!out_waiting_queue.empty())
+    {
+        Send();
+    }
+    else
+    {
+        rtmp_callback_->OnActive(connection_);
+    }
+}
+
+void RtmpContext::PushOutQueue(PacketPtr &&packet)
+{
+    out_waiting_queue.emplace_back(std::move(packet));
+    Send();
+}
+
+
+void RtmpContext::SendSetChunkSize()
+{
+    auto packet = Packet::NewPacker(32);
+    auto header = packet->Ext<RtmpMsgHeader>();
+    if (header)
+    {
+        header -> cs_id = kRtmpCSIDCommand;
+        header -> msg_sid = kRtmpMsID0;
+        header -> msg_len = 4;
+        header -> timestamp = 0;    
+        header -> msg_type = kRtmpMsgTypeChunkSize;
+    }
+
+    auto p = packet->Data();
+    packet -> UpDatePackSize(BytesWriter::WriteUint32T(p, out_chunk_size_));
+    RTMP_DEBUG << " send chunk size : " << out_chunk_size_ << " to host" << connection_ -> PeerAddr().ToIpPort();
+    PushOutQueue(std::move(packet));
+}
+
+void RtmpContext::SendAckWindowSize()
+{
+    auto packet = Packet::NewPacker(32);
+    auto header = packet->Ext<RtmpMsgHeader>();
+    if (header)
+    {
+        header -> cs_id = kRtmpCSIDCommand;
+        header -> timestamp = 0;
+        header -> msg_sid = kRtmpMsID0;
+        header -> msg_len = 4;
+        header -> msg_type = kRtmpMsgTypeWindowACKSize;
+    }
+
+    auto p = packet->Data();
+    packet -> UpDatePackSize(BytesWriter::WriteUint32T(p, ack_size_));
+    RTMP_DEBUG << " send ack size : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort();
+    PushOutQueue(std::move(packet));
+}
+
+void RtmpContext::SendSetPeerBandwidth()
+{
+    auto packet = Packet::NewPacker(32);
+    auto header = packet->Ext<RtmpMsgHeader>();
+    if (header)
+    {
+        header -> cs_id = kRtmpCSIDCommand;
+        header -> msg_sid = kRtmpMsID0;
+        header -> msg_len = 5;
+        header -> timestamp = 0;
+        header -> msg_type = kRtmpMsgTypeSetPeerBW;
+    }
+
+    auto p = packet->Data();
+    p += BytesWriter::WriteUint32T(p, ack_size_);
+    *p++ = 0x02;
+    packet -> UpDatePackSize(5);
+    RTMP_DEBUG << " send band width : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort();
+    PushOutQueue(std::move(packet));
+}
+
+void RtmpContext::SentBytesRecv()
+{
+    if (in_bytes_ >= ack_size_)
+    {
+        auto packet = Packet::NewPacker(32);
+        auto header = packet->Ext<RtmpMsgHeader>();
+        if (header)
+        {
+            header -> cs_id = kRtmpCSIDCommand;
+            header -> msg_sid = kRtmpMsID0;
+            header -> msg_len = 4;
+            header -> msg_type = kRtmpMsgTypeBytesRead;
+            header -> timestamp = 0;
+        }
+
+        auto p = packet->Data();
+        packet -> UpDatePackSize(BytesWriter::WriteUint32T(p, in_bytes_));
+        // RTMP_DEBUG << " send ack size : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort();
+        PushOutQueue(std::move(packet));
+        in_bytes_ = 0;
+    }
+    
+}
+
+void RtmpContext::SendUserCtrlMessage(short nType, uint32_t value1, uint32_t value2)
+{
+    auto packet = Packet::NewPacker(32);
+    auto header = packet->Ext<RtmpMsgHeader>();
+    if (header)
+    {
+        header -> cs_id = kRtmpCSIDCommand;
+        header -> timestamp = 0;
+        header -> msg_sid = kRtmpMsID0;
+        header -> msg_len = 6;
+        header -> msg_type = kRtmpMsgTypeWindowACKSize;
+    }
+
+    auto p = packet->Data();
+    auto temp = p;
+    p += BytesWriter::WriteUint16T(p, nType);
+    p += BytesWriter::WriteUint32T(p, value1);
+    if (nType == kRtmpEventTypeSetBufferLength)
+    {
+        p += BytesWriter::WriteUint32T(p, value2);
+        header -> msg_len += 4;
+    }
+    packet -> UpDatePackSize(header -> msg_len);
+    RTMP_DEBUG << " send ctrl msg : "
+                << " ntype :" << nType
+                << " value1 :" << value1
+                << " value2 " << value2
+                << " to host" << connection_ -> PeerAddr().ToIpPort();
+    PushOutQueue(std::move(packet));
+}
+
+void RtmpContext::HandleChunkSize(PacketPtr& packet)
+{
+    if (packet -> PacketSize() < 4)
+    {
+        RTMP_ERROR << " handle chunk size errror, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort();
+        return; 
+    }
+
+    auto size = BytesReader::ReadUint32T(packet->Data());
+
+    RTMP_TRACE << " in chunk size change from : " << in_chunk_size_ << " to " << size;
+
+    in_chunk_size_ = size;
+
+}
+
+void RtmpContext::HandleAckWindowSize(PacketPtr &packet)
+{
+    if (packet -> PacketSize() < 4)
+    {
+        RTMP_ERROR << " handle  ack error, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort();
+        return; 
+    }
+
+    auto size = BytesReader::ReadUint32T(packet->Data());
+
+    RTMP_TRACE << " in ack size change from : " << ack_size_ << " to " << size;
+
+    ack_size_ = size;
+}
+
+void RtmpContext::HandleUserMessage(PacketPtr &packet)
+{
+    auto msg_len = packet->PacketSize();
+
+    if (msg_len < 6)
+    {
+        RTMP_ERROR << " handle UserMessage error, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort();
+        return; 
+    }
+
+    auto body = packet->Data();
+    auto type = BytesReader::ReadUint16T(body);
+    auto value = BytesReader::ReadUint24T(body + 2);
+
+    switch(type)
+    {
+        case kRtmpEventTypeStreamBegin:
+        {
+            RTMP_TRACE << "recv stream begin value" << value << " host:" << connection_->PeerAddr().ToIpPort();
+            break;
+        }
+        case kRtmpEventTypeStreamEOF:
+        {
+            RTMP_TRACE << "recv stream eof value" << value << " host:" << connection_->PeerAddr().ToIpPort();
+            break;
+        }   
+        case kRtmpEventTypeStreamDry:
+        {
+            RTMP_TRACE << "recv stream dry value" << value << " host:" << connection_->PeerAddr().ToIpPort();
+            break;
+        }
+        case kRtmpEventTypeSetBufferLength:
+        {
+            RTMP_TRACE << "recv set buffer length value" << value << " host:" << connection_->PeerAddr().ToIpPort();
+            if(msg_len<10)
+            {
+                RTMP_ERROR << "invalid user control packet msg_len:" << packet->PacketSize()
+                << " host:" << connection_->PeerAddr().ToIpPort();                
+                return ;
+            }
+            break;
+        }   
+        case kRtmpEventTypeStreamsRecorded:
+        {
+            RTMP_TRACE << "recv stream recoded value" << value << " host:" << connection_->PeerAddr().ToIpPort();
+            break;
+        }
+        case kRtmpEventTypePingRequest:
+        {
+            RTMP_TRACE << "recv ping request value" << value << " host:" << connection_->PeerAddr().ToIpPort();
+            SendUserCtrlMessage(kRtmpEventTypePingResponse,value,0);
+            break;
+        }   
+        case kRtmpEventTypePingResponse:
+        {
+            RTMP_TRACE << "recv ping response value" << value << " host:" << connection_->PeerAddr().ToIpPort();
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void RtmpContext::HandleAMFMessage(PacketPtr &packet, bool amf3)
+{
+    RTMP_TRACE << " handler AMF message , " << connection_ -> PeerAddr().ToIpPort();
+    int msg_len = packet -> PacketSize();
+    auto body = packet -> Data();
+    if (amf3)
+    {
+        body++;
+        msg_len--;
+    }
+
+    AMFObject obj;
+    if (obj.Decode(body, msg_len) < 0)
+    {
+        RTMP_ERROR << "amf message decode error";
+        return;
+    }
+    obj.Dump();
+
 }

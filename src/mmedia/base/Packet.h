@@ -43,7 +43,11 @@ namespace vdse
                 }
 
                 ~Packet() {}
-
+                /**
+                 * @brief        :  创建一个新的packet，
+                 * @param         {int32_t} size:指定数据区大小
+                 * @return        {*}
+                **/                
                 static PacketPtr NewPacker(int32_t size);
 
                 bool IsVideo() const

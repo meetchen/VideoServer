@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-06-30 18:27:36
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-02 16:22:47
+ * @LastEditTime: 2024-07-04 20:09:24
  * @FilePath: /VideoServer/readme.md
  * @Description: 
  * 
@@ -58,3 +58,11 @@
 ### 2024-7-2
 - [RtmpContext](src/mmedia/rtmp/RtmpContext.h)，作为RTMP协议的上下文的对象，协助状态机解析
 - [RtmpServer](src/mmedia/rtmp/RtmpServer.cpp), 作为RTMP服务器，开始解析RTMP MESSAGE
+### 2024-7-3
+- [RtmpContext](src/mmedia/rtmp/RtmpContext.h)
+    - 实现了Rtmp消息头的创建，三种不同的消息头，以及时间戳拓展
+    - 实现了Rtmp消息的发送，即数据打包，每次发送一个标准header，随后发一个数据包，然后再发送fmt3格式头部，再发送数据包，以此类推
+### 2024-7-4
+- [amf](src/mmedia/rtmp/amf) 
+    - 实现AMF简单类型解析
+    - 实现AMFObject解析以及AMF解析测试

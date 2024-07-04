@@ -18,7 +18,7 @@ using namespace vdse::mmedia;
 using namespace std;
 
 
-RtmpServer::RtmpServer(EventLoop *loop, InetAddress &local, RtmpHandler *handler)
+RtmpServer::RtmpServer(EventLoop *loop, InetAddress &local, RtmpCallBack *handler)
 :TcpServer(loop, local), rtmp_handler_(handler)
 {
 

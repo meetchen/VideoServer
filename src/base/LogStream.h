@@ -42,15 +42,15 @@ namespace vdse
 }
 
 #define LOG_TRACE   \
-    if (g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
+    if (vdse::base::g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
         vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kTrace, __func__)
 
 #define LOG_DEBUG   \
-    if (g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
+    if (vdse::base::g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
         vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kDebug, __func__)
 
 #define LOG_INFO   \
-    if (g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
+    if (vdse::base::g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
         vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kInfo)
 
 #define LOG_WARN vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kWarn)

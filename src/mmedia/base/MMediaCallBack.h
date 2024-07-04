@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 18:27:35
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-01 18:32:40
+ * @LastEditTime: 2024-07-03 17:36:50
  * @FilePath: /VideoServer/src/mmedia/base/MMediaHandler.h
  * @Description: 多媒体模块的各种协议的回调 抽象基类 用于各种协议的继承， 类似于Java的接口
  * 
@@ -18,7 +18,7 @@ namespace vdse
     namespace mmedia
     {
         using namespace vdse::network;
-        class MMediaHandler: public vdse::base::NoCopyable
+        class MMediaCallBack: public vdse::base::NoCopyable
         {
             public:
                 virtual void OnNewConnection(const TcpConnectionPtr &conn) = 0;

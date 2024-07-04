@@ -4,14 +4,14 @@
  * @LastEditors: Duanran 995122760@qq.com
  * @LastEditTime: 2024-07-03 15:31:41
  * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpServer.h
- * @Description: Rtmp的服务端，继承TcpServer，组合RtmpHandler对上层进行回调
+ * @Description: Rtmp的服务端，继承TcpServer，组合RtmpCallBack对上层进行回调
  * 
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
 #pragma once
 
 #include "network/TcpServer.h"
-#include "mmedia/rtmp/RtmpHandler.h"
+#include "mmedia/rtmp/RtmpCallBack.h"
 #include "mmedia/rtmp/RtmpHandshake.h"
 #include "mmedia/rtmp/RtmpContext.h"
 
@@ -24,7 +24,7 @@ namespace vdse
         class RtmpServer : public TcpServer
         {
             public:
-                RtmpServer(EventLoop *loop, InetAddress &local, RtmpHandler *handler = nullptr);
+                RtmpServer(EventLoop *loop, InetAddress &local, RtmpCallBack *handler = nullptr);
                 ~RtmpServer();
 
                 void Start() override;
@@ -36,7 +36,7 @@ namespace vdse
                 void OnWriteComplete(const ConnectionPtr &conn);
                 void OnActive(const ConnectionPtr &conn);
                 
-                RtmpHandler *rtmp_handler_{nullptr};
+                RtmpCallBack *rtmp_handler_{nullptr};
 
         };
 
