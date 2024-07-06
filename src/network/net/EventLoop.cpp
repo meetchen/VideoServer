@@ -4,7 +4,7 @@
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : Please set LastEditors
- * @LastEditTime : 2024-07-06 21:58:40
+ * @LastEditTime : 2024-07-06 23:18:23
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "EventLoop.h"
@@ -183,7 +183,7 @@ bool EventLoop::EnableEventReading(const EventPtr &event, bool enable)
     }
     else
     {
-        event->event_ |= ~kEventRead;
+        event->event_ &= ~kEventRead;
     }
     events_[event->Fd()] = event;
 
