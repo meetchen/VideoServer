@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-04 14:42:41
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-04 20:06:45
+ * @LastEditTime: 2024-07-05 17:54:46
  * @FilePath: /VideoServer/src/mmedia/rtmp/amf/AMFObject.cpp
  * @Description: 
  * 
@@ -57,12 +57,13 @@ int AMFObject::Decode(const char *data, int size, bool has)
         if (has)
         {
             nname = DecodeString(data);
+            std::cout << nname << std::endl;
+
             parsed += (nname.size() + 2);
             data += (nname.size() + 2);
         }
 
         int type = *data++;
-        // RTMP_TRACE << " decode type : " << type << " parsed : " << parsed;
 
         parsed++;
 
@@ -78,7 +79,7 @@ int AMFObject::Decode(const char *data, int size, bool has)
                 }
                 data += ret;
                 parsed += ret;
-                RTMP_TRACE << " AMF Boolean " << p ->Boolean();
+                RTMP_TRACE << " AMF Boolean " << p ->Boolean() << " ret = " << ret << "\n";
                 properties_.push_back(std::move(p));
 
                 break;
@@ -93,7 +94,7 @@ int AMFObject::Decode(const char *data, int size, bool has)
                 }
                 data += ret;
                 parsed += ret;
-                RTMP_TRACE << " AMF Date " << p ->Date();
+                RTMP_TRACE << " AMF Date " << p ->Date() << " ret = " << ret << "\n";
                 properties_.push_back(std::move(p));
 
                 break;
@@ -108,7 +109,7 @@ int AMFObject::Decode(const char *data, int size, bool has)
                 }
                 data += ret;
                 parsed += ret;
-                RTMP_TRACE << " AMF String " << p ->String();
+                RTMP_TRACE << " AMF String " << p ->String() << " ret = " << ret << "\n";
 
                 properties_.push_back(std::move(p));
 
@@ -124,7 +125,7 @@ int AMFObject::Decode(const char *data, int size, bool has)
                 }
                 data += ret;
                 parsed += ret;
-                RTMP_TRACE << " AMF Long String " << p ->String();
+                RTMP_TRACE << " AMF Long String " << p ->String() << " ret = " << ret << "\n";
                 properties_.push_back(std::move(p));
 
                 break;
@@ -202,7 +203,7 @@ int AMFObject::Decode(const char *data, int size, bool has)
                 }
                 data += ret;
                 parsed += ret;
-                RTMP_TRACE << " AMF Number " << p ->Number();
+                RTMP_TRACE << " AMF Number " << p ->Number() << " ret = " << ret << "\n";
                 properties_.push_back(std::move(p));
 
                 break;
@@ -250,6 +251,7 @@ int AMFObject::DecodeOnce(const char *data, int size, bool has)
     if (has)
     {
         nname = DecodeString(data);
+        std::cout << nname << std::endl;
         parsed += nname.size() + 2;
         data += nname.size() + 2;
     }
@@ -268,7 +270,7 @@ int AMFObject::DecodeOnce(const char *data, int size, bool has)
             }
             data += ret;
             parsed += ret;
-            RTMP_TRACE << " AMF Boolean " << p ->Boolean();
+            RTMP_TRACE << " AMF Boolean " << p ->Boolean() << " ret = " << ret << "\n";
             properties_.push_back(std::move(p));
             break;
         }
@@ -282,7 +284,7 @@ int AMFObject::DecodeOnce(const char *data, int size, bool has)
             }
             data += ret;
             parsed += ret;
-            RTMP_TRACE << " AMF Date " << p ->Date();
+            RTMP_TRACE << " AMF Date " << p ->Date() << " ret = " << ret << "\n";
             properties_.push_back(std::move(p));
             break;
         }
@@ -296,7 +298,7 @@ int AMFObject::DecodeOnce(const char *data, int size, bool has)
             }
             data += ret;
             parsed += ret;
-            RTMP_TRACE << " AMF String " << p ->String();
+            RTMP_TRACE << " AMF String " << p ->String() << " ret = " << ret << "\n";
             properties_.push_back(std::move(p));
             break;
         }
@@ -310,7 +312,7 @@ int AMFObject::DecodeOnce(const char *data, int size, bool has)
             }
             data += ret;
             parsed += ret;
-            RTMP_TRACE << " AMF Long String " << p ->String();
+            RTMP_TRACE << " AMF Long String " << p ->String() << " ret = " << ret << "\n";
             properties_.push_back(std::move(p));
             break;
         }
@@ -324,7 +326,7 @@ int AMFObject::DecodeOnce(const char *data, int size, bool has)
             }
             data += ret;
             parsed += ret;
-            RTMP_TRACE << " AMF Object ";
+            RTMP_TRACE << " AMF Object " << " ret = " << ret << "\n";
             properties_.push_back(std::move(p));
             p -> Dump();
             break;
@@ -386,7 +388,7 @@ int AMFObject::DecodeOnce(const char *data, int size, bool has)
             }
             data += ret;
             parsed += ret;
-            RTMP_TRACE << " AMF Number " << p ->Number();
+            RTMP_TRACE << " AMF Number " << p ->Number() << " ret = " << ret << "\n";
             properties_.push_back(std::move(p));
             break;
         }

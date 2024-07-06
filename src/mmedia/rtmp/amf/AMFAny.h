@@ -100,12 +100,15 @@ namespace vdse
                 static int32_t EncodeNumber(char *output, double dVal);
                 static int32_t EncodeString(char *output, const std::string& str);
                 static int32_t EncodeBoolean(char *output, bool b);
+
                 static int32_t EncodeNamedNumber(char *output, const std::string &name, double dVal);
                 static int32_t EncodeNamedString(char *output, const std::string &name, const std::string &value);
                 static int32_t EncodeNamedBoolean(char *output, const std::string &name, bool bVal);
                 
 
             private:
+                static int32_t EncodeName(char *output, const std::string &name);
+                
 
                 std::string name_;
         };

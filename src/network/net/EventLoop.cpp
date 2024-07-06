@@ -3,8 +3,8 @@
  * @Description  :  
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditors  : Duanran 995122760@qq.com
- * @LastEditTime : 2024-06-29 16:13:25
+ * @LastEditors  : Please set LastEditors
+ * @LastEditTime : 2024-07-06 21:58:40
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "EventLoop.h"
@@ -13,7 +13,6 @@
 #include "base/TTime.h"
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <iostream>
 
 using namespace vdse::network;
 
@@ -158,7 +157,7 @@ bool EventLoop::EnableEventWriting(const EventPtr &event, bool enable)
     }
     else
     {
-        event->event_ |= ~kEventWrite;
+        event->event_ &= ~kEventWrite;
     }
     events_[event->Fd()] = event;
 

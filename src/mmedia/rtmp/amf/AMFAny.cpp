@@ -2,13 +2,16 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-04 11:19:14
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-04 19:51:18
+ * @LastEditTime: 2024-07-05 17:51:15
  * @FilePath: /VideoServer/src/mmedia/rtmp/amf/AMFAny.cpp
  * @Description: 所有amf的基类 提供通用的方法
  * 
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
 #include "mmedia/rtmp/amf/AMFAny.h"
+#include "mmedia/base/BytesWriter.h"
+#include <cstdio>
+#include <cstring>
 
 
 using namespace vdse::mmedia;
@@ -139,37 +142,102 @@ std::string AMFAny:: DecodeString(const char *data)
 {
 
     auto len = BytesReader::ReadUint16T(data);
-    
+    std::cout  << "DecodeSting len : " << len << std::endl;
+    // std::printf(" data: %s", data + 2);
+    // std::cout  << "-----" << std::endl;
+
     if (len > 0)
     {
-        std::string str(data + 2, len);
-        return str;
+        return std::string(data + 2, len);
     }
     return string_null;
 }
 
 
-// int32_t AMFAny::EncodeNumber(char *output, double dVal)
-// {
+int32_t AMFAny::EncodeNumber(char *output, double dVal)
+{
+    char *p = output;
 
-// }
-// int32_t AMFAny::EncodeString(char *output, const std::string& str)
-// {
+    *p++ = kAMFNumber;
 
-// }
-//  int32_t AMFAny::EncodeBoolean(char *output, bool b)
-// {
+    p += BytesWriter::WriteDouble64T(p, dVal);
 
-// }
-//  int32_t AMFAny::EncodeNamedNumber(char *output, const std::string &name, double dVal)
-// {
+    return p - output;
+}
 
-// }
-//  int32_t AMFAny::EncodeNamedString(char *output, const std::string &name, const std::string &value)
-// {
+int32_t AMFAny::EncodeString(char *output, const std::string& str)
+{
+    char *p = output;
+
+    *p++ = kAMFString;
+
+    uint16_t size = str.size();
+
+    p += BytesWriter::WriteUint16T(p, size);
+
+    memcpy(p, str.c_str(), size);
+
+    p += size;
+
+    return p - output;
+}
+
+int32_t AMFAny::EncodeBoolean(char *output, bool b)
+{
+    char *p = output;
+
+    *p++ = kAMFBoolean;
+
+    *p++ = b ? 0x01 : 0x00;
+
+    return p - output;
+}
+int32_t AMFAny::EncodeNamedNumber(char *output, const std::string &name, double dVal)
+{
+    char *p = output;
+
+
+    p += EncodeName(p, name);
+
+    p += EncodeNumber(p, dVal);
+
+
+    return p - output;
+}
+ int32_t AMFAny::EncodeNamedString(char *output, const std::string &name, const std::string &value)
+{
+    char *p = output;
+
+
+    p += EncodeName(p, name);
+
+    p += EncodeString(p, value);
+
+    return p - output;
+}
+ int32_t AMFAny::EncodeNamedBoolean(char *output, const std::string &name, bool bVal)
+{
+    char *p = output;
+
+
+    p += EncodeName(p, name);
+
+    p += EncodeBoolean(p, bVal);
+
+    return p - output;
     
-// }
-//  int32_t AMFAny::EncodeNamedBoolean(char *output, const std::string &name, bool bVal)
-// {
+}
+int32_t AMFAny::EncodeName(char *output, const std::string &name)
+{
+    char *p = output;
 
-// }
+    uint16_t size = name.size();
+
+    p += BytesWriter::WriteUint16T(p, size);
+
+    memcpy(p, name.c_str(), size);
+
+    p += size;
+
+    return p - output;
+}

@@ -67,7 +67,7 @@ namespace vdse
                 uint8_t digest_[SHA256_DIGEST_LENGTH];
                 uint8_t C1S1_[kRtmpHandshakePacketSize + 1];
                 uint8_t C2S2_[kRtmpHandshakePacketSize];
-                uint8_t state_{kHandshakeInit};
+                int state_{kHandshakeInit};
 
                 int32_t CheckC1S1(const char *data, int bytes);
                 void CreateC1S1();

@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-02 22:26:16
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-04 19:16:36
+ * @LastEditTime: 2024-07-05 17:31:59
  * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpContext.h
  * @Description: Rtmp 消息解析, 作为一个上下文对象配合后续解析
  * 
@@ -14,6 +14,7 @@
 #include "mmedia/rtmp/RtmpHeader.h"
 #include "mmedia/base/Packet.h"
 #include "mmedia/rtmp/RtmpCallBack.h"
+#include "mmedia/rtmp/amf/AMFObject.h"
 #include <unordered_map>
 #include <memory>
 
@@ -23,8 +24,8 @@ namespace vdse
     {
         enum RtmpContextState
         {
-            kRtmpHandshake = 1,
-            kRtmpWaitDone,
+            kRtmpHandshake = 0,
+            kRtmpWatingDone,
             kRtmpMessage,
         };
 
@@ -42,6 +43,8 @@ namespace vdse
         using namespace vdse::network;
 
         const int MESSAGE_CHUNK_SIZE = 4096;
+
+        using CommandCallBack = std::function<void(AMFObject&)>;
         
         class RtmpContext
         {
@@ -52,7 +55,7 @@ namespace vdse
 
                 int32_t Parse(MsgBuffer &buf);
 
-                void OnwriteComplete();
+                void OnWriteComplete();
          
                 void StartHandshake();
 
@@ -61,6 +64,11 @@ namespace vdse
                 void MessageComplete(PacketPtr &&data);
 
                 void HandleAMFMessage(PacketPtr &packet, bool);
+
+                void DumpShake()
+                {
+                    RTMP_TRACE << ((int)(state_)) << " \n";
+                }
 
 
                 
@@ -105,9 +113,59 @@ namespace vdse
 
                 void PushOutQueue(PacketPtr &&Packet);
 
+
+                /**
+                 * @brief        :  客户端发送连接请求命令 amf
+                 * @return        {*}
+                **/                
+                void SendConnect();
+
+                /**
+                 * @brief        : 处理客户端的请求命令 
+                 * @param         {AMFObject} &obj: 收到的客户端请求命令体
+                 * @return        {*}
+                **/                
+                void HandleConnect(AMFObject &obj);
+
+
+                void SendCreateStream();
+
+                void HandleCreateStream(AMFObject &obj);
+
+                /**
+                 * @brief        :  通知netStream状态更新
+                 * @param         {string} &level:state error waring
+                 * @param         {string} &code: 规定的状态值
+                 * @param         {string} &description: 人类可读的描述
+                 * @return        {*}
+                **/                
+                void SendStatus(const std::string &level, const std::string &code, const std::string &description);
+
+                /**
+                 * @brief        :  客户端发送play命令
+                 * @return        {*}
+                **/                
+                void SendPlay();
+
+                /**
+                 * @brief        : 服务端收到play命令后，发送控制流消息， 使用onstatus通知客户端 
+                 * @param         {AMFObject} &obj:
+                 * @return        {*}
+                **/                
+                void HandlePlay(AMFObject &obj);
+
+                void ParseNameAndTcUrl();
+
+                void SendPublish();
+                void HandlePublish(AMFObject &obj);
+
+                void HandleResult(AMFObject &obj);
+                void HandleError(AMFObject &obj);
+                void SetPacketType(PacketPtr &packet);
+
                 TcpConnectionPtr connection_;
 
-                uint8_t state_{kRtmpHandshake};
+                int state_{kRtmpHandshake};
 
                 RtmpHandshake handshake_;
 
@@ -144,7 +202,7 @@ namespace vdse
                 int32_t out_chunk_size_{MESSAGE_CHUNK_SIZE};
 
                 // 待发送的数据缓 待处理为BufferNodePtr
-                std::list<PacketPtr> out_waiting_queue;
+                std::list<PacketPtr> out_waiting_queue_;
 
                 // 发送中的数据
                 std::list<BufferNodePtr> sending_bufs_;
@@ -166,6 +224,22 @@ namespace vdse
                 // 剩下的数据
                 int32_t last_left_{0};
 
+                // 推流的项目名称
+                std::string app_;
+                // 推流的地址
+                std::string tc_url_;
+                // 流名
+                std::string name_;
+                // 一个流对应的会话名称
+                std::string session_name_;
+                // 推流地址所带的参数
+                std::string param_;
+                // 该流当前是播放的还是停止的
+                bool is_player_{false};
+                // std::unordered_map<std::string,CommandFunc> commands_;
+                bool is_client_{false};
+
+                std::unordered_map<std::string, CommandCallBack> commands_;
         };
         using RtmpContextPtr = std::shared_ptr<RtmpContext>;
     }

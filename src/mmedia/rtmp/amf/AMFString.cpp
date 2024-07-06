@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-04 14:42:41
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-04 19:51:15
+ * @LastEditTime: 2024-07-05 16:44:15
  * @FilePath: /VideoServer/src/mmedia/rtmp/amf/AMFString.cpp
  * @Description: 
  * 
@@ -37,6 +37,7 @@ int AMFString::Decode(const char *data, int size, bool has)
         return -1;
     }
     auto len = BytesReader::ReadUint16T(data);
+
 
     if (size - 2 < len || len < 0)
     {

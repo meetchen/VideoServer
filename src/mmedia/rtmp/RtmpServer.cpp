@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-02 19:45:45
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-03 15:56:48
+ * @LastEditTime: 2024-07-05 11:09:22
  * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpServer.cpp
  * @Description: IMP RTMPSERVER.H
  * 
@@ -10,16 +10,15 @@
  */
 #include "mmedia/rtmp/RtmpServer.h"
 #include "mmedia/base/MMediaLog.h"
+#include "base/StringUtils.h"
 #include <functional>
-#include <iostream>
 
 
 using namespace vdse::mmedia;
-using namespace std;
 
 
 RtmpServer::RtmpServer(EventLoop *loop, InetAddress &local, RtmpCallBack *handler)
-:TcpServer(loop, local), rtmp_handler_(handler)
+:TcpServer(loop, local), rtmp_callback_(handler)
 {
 
 }
@@ -29,6 +28,8 @@ RtmpServer::~RtmpServer()
     Stop();
 }
 
+
+
 void RtmpServer::Start() 
 {
     TcpServer::SetNewConnectionCallBack(std::bind(&RtmpServer::OnNewConneciton, this, std::placeholders::_1));
@@ -37,6 +38,7 @@ void RtmpServer::Start()
     TcpServer::SetWriteCompleteCallBack(std::bind(&RtmpServer::OnWriteComplete, this, std::placeholders::_1));
     TcpServer::SetActiveCallBack(std::bind(&RtmpServer::OnActive, this, std::placeholders::_1));
     TcpServer::Start();
+    RTMP_TRACE << "Rtmp Server Start..\n";
 }
 
 void RtmpServer::Stop() 
@@ -44,22 +46,25 @@ void RtmpServer::Stop()
     TcpServer::Stop();
 }
 
+
+//  b /home/duanran/workSpace/VideoServer/src/mmedia/rtmp/RtmpServer.cpp:52
 void RtmpServer::OnNewConneciton(const TcpConnectionPtr &conn)
 {
-    if (rtmp_handler_)
+    RTMP_TRACE << " RtmpServer::OnNewConneciton(const TcpConnectionPtr &conn) \n";
+    if (rtmp_callback_)
     {
-       rtmp_handler_->OnNewConnection(conn);
+       rtmp_callback_->OnNewConnection(conn);
     }
-    auto shake = std::make_shared<RtmpContext>(conn, nullptr);
+    auto shake = std::make_shared<RtmpContext>(conn, rtmp_callback_);
     conn -> SetContext(kRtmpContext, shake);
     shake -> StartHandshake();
 }
 
 void RtmpServer::OnDestroyed(const TcpConnectionPtr &conn)
 {
-    if (rtmp_handler_)
+    if (rtmp_callback_)
     {
-        rtmp_handler_->OnConnectionDestroy(conn);
+        rtmp_callback_->OnConnectionDestroy(conn);
     }
     conn->ClearContext(kRtmpContext);
 
@@ -74,7 +79,7 @@ void RtmpServer::OnMessage(const TcpConnectionPtr &conn, MsgBuffer &buf)
         // 握手成功
         if (ret == 0)
         {
-            RTMP_TRACE << " host " << conn -> PeerAddr().ToIpPort() << " handshake finish \n";
+            RTMP_TRACE << " host " << conn -> PeerAddr().ToIpPort() << "handshake finish \n";
         }
         else if (ret == -1)
         {
@@ -87,17 +92,18 @@ void RtmpServer::OnMessage(const TcpConnectionPtr &conn, MsgBuffer &buf)
 
 void RtmpServer::OnWriteComplete(const ConnectionPtr &conn)
 {
+
     auto shake = conn -> GetContext<RtmpContext>(kRtmpContext);
     if (shake)
     {
-        shake -> OnwriteComplete();
+        shake -> OnWriteComplete();
     }
 }
 
 void RtmpServer::OnActive(const ConnectionPtr &conn)
 {
-    if (rtmp_handler_)
+    if (rtmp_callback_)
     {
-        rtmp_handler_ -> OnActive(conn);
+        rtmp_callback_ -> OnActive(conn);
     }
 }

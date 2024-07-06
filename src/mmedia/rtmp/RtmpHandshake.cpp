@@ -334,7 +334,7 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
         {
             if (buf.ReadableBytes() < kRtmpHandshakePacketSize)
             {
-                return -1;
+                return 1;
             }
             RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << ", recv c2 \n";
             if (CheckC2S2(buf.Peek(), kRtmpHandshakePacketSize))
@@ -393,14 +393,13 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
 
 void RtmpHandshake::WriteComplete()
 {
-    // RTMP_TRACE << " state_ =  " << state_ ;
+    RTMP_TRACE << " RtmpHandshake::WriteComplete state_ =  " << state_ ;
     
     switch(state_)
     {
         case KHandshakePostS0S1:
         {
             RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostS0S1\n";
-
             state_ = KHandshakePostS2;
             SendC2S2();
             break;
@@ -408,21 +407,18 @@ void RtmpHandshake::WriteComplete()
         case KHandshakePostS2:
         {
             RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostS2\n";
-
             state_ = KHandshakeWaitC2;
             break;
         }
         case KHandshakePostC0C1:
         {
             RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostC0C1\n";
-
             state_ = KHandshakeWaitS0S1;
             break;
         }
         case KHandshakePostC2:
         {
             RTMP_TRACE << " host " << connection_ -> PeerAddr().ToIpPort() << " PostC2. Done\n";
-
             state_ = KHandshakeDone;
             break;
         }

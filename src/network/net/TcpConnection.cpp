@@ -4,7 +4,6 @@
 
 using namespace vdse::network;
 
-
 TcpConnection::TcpConnection(EventLoop *loop, int socketfd, const InetAddress& localAddr, const InetAddress& peerAddr)
 :Connection(loop, socketfd, localAddr, peerAddr)
 {
@@ -142,6 +141,7 @@ void TcpConnection::OnWrite()
                     {
                         write_complete_cb_(std::dynamic_pointer_cast<TcpConnection>(shared_from_this()));
                     }
+                    return;
                 }
             }
             else
@@ -152,6 +152,7 @@ void TcpConnection::OnWrite()
                     OnClose();
                     return;
                 }
+                break;
             }
         }
     }
@@ -205,6 +206,7 @@ void TcpConnection::SendInLoop(std::list<BufferNodePtr> &list)
         vec.iov_len = buf->size;
         io_vec_list_.push_back(vec);
     }
+
     if (!io_vec_list_.empty())
     {
         EnableWriting(true);

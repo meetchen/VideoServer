@@ -34,6 +34,13 @@ int BytesWriter::WriteUint8T(char *buf, uint8_t val)
     return 1;
 }
 
+int BytesWriter::WriteDouble64T(char *buf, double val)
+{
+    uint64_t res, in;
+    memcpy(&in, &val, sizeof(double));
 
-
+    res = __bswap_64(in);
+    memcpy(buf, &res, 8);
+    return 8;
+}
 

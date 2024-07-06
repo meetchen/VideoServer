@@ -2,9 +2,9 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 22:53:04
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-04 10:53:45
+ * @LastEditTime: 2024-07-05 15:41:19
  * @FilePath: /VideoServer/src/mmedia/tests/HandsakeServerTest.cpp
- * @Description: rtmp 握手实现 测试 ffmpeg -i ~/Downloads/test.mp4 -c:v copy -c:a copy -f flv rtmp://192.168.159.131:1935/U
+ * @Description: rtmp 握手实现 测试 ffmpeg -i ~/Downloads/test.mp4 -c:v copy -c:a copy -f flv rtmp://192.168.159.131/test
  * 
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
