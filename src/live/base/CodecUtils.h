@@ -4,7 +4,7 @@
  * @LastEditors: Duanran 995122760@qq.com
  * @LastEditTime: 2024-07-09 15:35:27
  * @FilePath: /VideoServer/src/live/base/CodecUtils.h
- * @Description: 
+ * @Description: 基于flv包，对其帧进行检测
  * 
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
@@ -22,6 +22,8 @@ namespace vdse
         {
             public:
                 static bool IsCodecHeader(const PacketPtr &packet);
+
+                static bool IsKeyFrame(const PacketPtr &packet);
         };
     }
 }

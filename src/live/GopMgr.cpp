@@ -41,7 +41,7 @@ size_t GopMgr::GopSize() const
 
 int GopMgr::GetGopByLatency(int content_latency, int &latency) const
 {
-    int pos = 0;
+    int pos = -1;
 
     latency = 0;
 

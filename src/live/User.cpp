@@ -7,6 +7,7 @@ User::User(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s)
 :connection_(ptr)
 {
     start_timestamp_ = vdse::base::TTime::NowMS();
+    user_id_ = ptr->PeerAddr().ToIpPort();
 }
 
 

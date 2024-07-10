@@ -16,3 +16,14 @@ bool CodecUtils::IsCodecHeader(const PacketPtr &packet)
     }
     return false;
 }
+
+
+bool CodecUtils::IsKeyFrame(const PacketPtr &packet)
+{
+    if (packet->PacketSize() > 0)
+    {
+        auto p = packet->Data();
+        return ((*p>>4)&0x0f) == 1;
+    }
+    return false;
+}

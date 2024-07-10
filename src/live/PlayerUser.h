@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 16:35:16
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 17:16:47
+ * @LastEditTime: 2024-07-10 19:28:19
  * @FilePath: /VideoServer/src/live/PlayerUser.h
  * @Description: 消费视频流(提供给子类一个纯虚函数) 时间戳校正
  * 
@@ -42,7 +42,7 @@ namespace vdse
             PacketPtr meta_;  
 
             bool wait_meta_{true}; 
-            bool wait_audio_{true}; 
+            bool wait_audio_{true};  
             bool wait_video_{true}; 
 
             int32_t video_header_index_{0};
@@ -51,8 +51,8 @@ namespace vdse
 
             TimeCorrector time_corrector_;
             bool wait_timeout_{false};
-            int32_t out_version_{-1};
-            int32_t out_frame_timestamp_{0};
+            int32_t out_version_{-1}; // 正在输出的流版本号
+            int32_t out_frame_timestamp_{0}; //当前发送帧的时间戳
             std::vector<PacketPtr> out_frames_;
             int32_t out_index_{-1};
         };

@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 15:25:42
  * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 16:02:19
+ * @LastEditTime: 2024-07-10 18:58:24
  * @FilePath: /VideoServer/src/live/GopMgr.h
  * @Description:  关于GOP，即两个I帧之间的所有帧，因为视频发送的首帧需要是I帧
  * 
@@ -39,7 +39,11 @@ namespace vdse
             public:
                 GopMgr() = default;
                 ~GopMgr() = default;
-                
+                /**
+                 * @description: 收到一帧，调用packet进行检查管理，更新gop信息
+                 * @param {PacketPtr} &packet
+                 * @return {*}
+                 */                
                 void AddFrame(const PacketPtr &packet);
                 int32_t MaxGopLength() const;
                 size_t GopSize() const;

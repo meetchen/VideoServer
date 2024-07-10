@@ -22,7 +22,7 @@ CodecHeader::~CodecHeader()
 
 }
 
-PacketPtr  CodecHeader::Meta(int idx)
+PacketPtr CodecHeader::Meta(int idx)
 {
     if(idx <= 0)
     {
@@ -38,7 +38,7 @@ PacketPtr  CodecHeader::Meta(int idx)
     return meta_;
 }
 
-PacketPtr  CodecHeader::VideoHeader(int idx)
+PacketPtr CodecHeader::VideoHeader(int idx)
 {
     if(idx <= 0)
     {
@@ -54,7 +54,7 @@ PacketPtr  CodecHeader::VideoHeader(int idx)
     return video_header_;
 }
 
-PacketPtr  CodecHeader::AudioHeader(int idx)
+PacketPtr CodecHeader::AudioHeader(int idx)
 {
     if(idx <= 0)
     {
@@ -82,7 +82,7 @@ void CodecHeader::SaveMeta(const PacketPtr &packet)
 }
 void CodecHeader::ParseMeta(const PacketPtr &packet)
 {
-AMFObject obj;
+    AMFObject obj;
     if(!obj.Decode(packet->Data(),packet->PacketSize()))
     {
         return;
