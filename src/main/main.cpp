@@ -1,3 +1,13 @@
+/*
+ * @Author: Duanran 995122760@qq.com
+ * @Date: 2024-06-04 11:03:43
+ * @LastEditors: Duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-09 14:46:05
+ * @FilePath: /VideoServer/src/main/main.cpp
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ */
 #include "base/Config.h"
 #include "base/LogStream.h"
 #include "base/FileMg.h"
@@ -12,6 +22,9 @@ using namespace vdse::base;
 
 int main(int argc,const char ** argv)
 {
+    g_logger.reset(new Logger(nullptr));
+
+    g_logger->SetLogLevel(kTrace);
 
     if(!sConfigMg->LoadConfig("../config/config.json"))
     {
@@ -34,9 +47,7 @@ int main(int argc,const char ** argv)
     }
     log->SetRotate(log_info->rotate);
 
-    g_logger.reset(new Logger(log));
 
-    g_logger->SetLogLevel(log_info->level);
 
     TaskPtr task4 = std::make_shared<Task>([](const TaskPtr &task)
                                         {

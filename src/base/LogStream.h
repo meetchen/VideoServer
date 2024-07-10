@@ -1,3 +1,13 @@
+/*
+ * @Author: Duanran 995122760@qq.com
+ * @Date: 2024-06-03 15:14:36
+ * @LastEditors: Duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-09 11:41:20
+ * @FilePath: /VideoServer/src/base/LogStream.h
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ */
 
 #pragma once
 
@@ -5,7 +15,6 @@
 #include <sstream>
 #include <memory>
 
-//TODO Fix Log always display line one
 
 namespace vdse
 {
@@ -43,16 +52,16 @@ namespace vdse
 
 #define LOG_TRACE   \
     if (vdse::base::g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
-        vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kTrace, __func__)
+        vdse::base::LogStream(vdse::base::g_logger, __FILE__, __LINE__, vdse::base::kTrace, __func__)
 
 #define LOG_DEBUG   \
     if (vdse::base::g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
-        vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kDebug, __func__)
+        vdse::base::LogStream(vdse::base::g_logger, __FILE__, __LINE__, vdse::base::kDebug, __func__)
 
 #define LOG_INFO   \
     if (vdse::base::g_logger && vdse::base::g_logger->GetLogLevel() <= vdse::base::kTrace)    \
-        vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kInfo)
+        vdse::base::LogStream(vdse::base::g_logger, __FILE__, __LINE__, vdse::base::kInfo)
 
-#define LOG_WARN vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kWarn)
+#define LOG_WARN vdse::base::LogStream(vdse::base::g_logger, __FILE__, __LINE__, vdse::base::kWarn)
 
-#define LOG_ERROR vdse::base::LogStream(vdse::base::g_logger, __FILE__, __linux__, vdse::base::kError)
+#define LOG_ERROR vdse::base::LogStream(vdse::base::g_logger, __FILE__, __LINE__, vdse::base::kError)

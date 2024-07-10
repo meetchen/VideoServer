@@ -238,9 +238,10 @@ void TcpConnection::SendInLoop(const char *buf, size_t size)
         }
         size -= len;
         if (size == 0)
-        {
+        {   
             if (write_complete_cb_)
             {
+
                 write_complete_cb_(std::dynamic_pointer_cast<TcpConnection>(shared_from_this()));
             }
             return;

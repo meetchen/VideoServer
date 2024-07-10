@@ -78,6 +78,20 @@ namespace vdse
                 
                 bool Ready() const;
 
+                /**
+                 * @brief        :  拉流
+                 * @param         {string} &url:
+                 * @return        {*}
+                **/
+                void Play(const std::string &url);
+
+                /**
+                 * @brief        :  推流
+                 * @param         {string} &url:
+                 * @return        {*}
+                **/                
+                void Publish(const std::string &url) ;
+
             private:
 
                 bool BuildChunk(PacketPtr &&packet, uint32_t timestamp = 0, bool fmt0 = false);
@@ -153,6 +167,8 @@ namespace vdse
                  * @return        {*}
                 **/                
                 void HandlePlay(AMFObject &obj);
+
+
 
                 void ParseNameAndTcUrl();
 

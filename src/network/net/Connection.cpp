@@ -1,3 +1,13 @@
+/*
+ * @Author: Duanran 995122760@qq.com
+ * @Date: 2024-06-26 15:00:58
+ * @LastEditors: Duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-10 16:26:16
+ * @FilePath: /VideoServer/src/network/net/Connection.cpp
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ */
 #include "network/net/Connection.h"
 
 using namespace vdse::network;
@@ -68,7 +78,6 @@ void Connection::Active()
             active_.store(true);
             if (active_cb_)
             {
-                // using ActiveCallBack = std::function<void(const ConnectionPtr &)>;
                 active_cb_(std::dynamic_pointer_cast<Connection>(shared_from_this()));
             }
         });

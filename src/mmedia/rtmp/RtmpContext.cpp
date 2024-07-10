@@ -1,153 +1,9 @@
 /**
- * @brief        :  
- * @param         {include <thread>using namespace vdse::mmedia;RtmpContext::RtmpContext(TcpConnectionPtr &conn, RtmpCallBack *hanlder, bool client):connection_(conn), handshake_(conn, client), rtmp_callback_(hanlder){    commands_["connect"] = std::bind(&RtmpContext::HandleConnect,this,std::placeholders::_1);    commands_["createStream"] = std::bind(&RtmpContext::HandleCreateStream,this,std::placeholders::_1);    commands_["_result"] = std::bind(&RtmpContext::HandleResult,this,std::placeholders::_1);    commands_["_error"] = std::bind(&RtmpContext::HandleError,this,std::placeholders::_1);    commands_["play"] = std::bind(&RtmpContext::HandlePlay,this,std::placeholders::_1);    commands_["publish"] = std::bind(&RtmpContext::HandlePublish,this,std::placeholders::_1);    out_current_ = out_buffer_;}RtmpContext::~RtmpContext(){}int32_t RtmpContext::Parse(MsgBuffer &buf){    RTMP_TRACE << "RtmpContext::Parse(MsgBuffer &buf) state : " << state_ << " \n";    int32_t ret = -1;    if (state_ == kRtmpHandshake)    {        ret = handshake_.Handshake(buf);        if (ret == 0)        {             state_ = kRtmpMessage;            if (buf.ReadableBytes() > 0)            {                RTMP_TRACE << " still has readable bytes : " << buf.ReadableBytes() << "\n";                return Parse(buf);            }        }        else if (ret == 2)        {            state_ = kRtmpWatingDone;        }        else if (ret == -1)        {            RTMP_ERROR << " handshake parse error ";        }    }    else if (state_ == kRtmpWatingDone)    {            }    else if (state_ == kRtmpMessage)    {                auto r = ParseMessage(buf);        last_left_ = buf.ReadableBytes();        return r;    }      return ret;}void RtmpContext::OnWriteComplete(){    RTMP_TRACE << "RtmpContext::OnWriteComplete() , state_ =  " << state_ << " \n";    if (state_ == kRtmpHandshake)    {        handshake_.WriteComplete();    }    else if (state_ == kRtmpWatingDone)    {        state_ = kRtmpMessage;        if (is_client_)        {            SendConnect();        }    }    else if (state_ == kRtmpMessage)    {        CheckAfterSend();    }}void RtmpContext::StartHandshake(){    handshake_.Start();}int32_t RtmpContext::ParseMessage(MsgBuffer &buf){    uint8_t fmt;    uint32_t csid, msg_len = 0, msg_sid = 0, timestamp = 0;    uint8_t msg_type = 0;    uint32_t total_bytes = buf.ReadableBytes();    int32_t parsed = 0;        in_bytes_ += (buf.ReadableBytes() - last_left_);    SentBytesRecv();    while (total_bytes > 1)    {char *pos = buf.Peek();        // Basic Header                // 首字节的前两位为版本号        fmt = (*pos >> 6) & 0x03;        // 首字节的后六位为csid        csid = (*pos & 0x3f);        parsed++;        if (csid == 0)        {               // 第一个字节后6位取值0，表示csid至少是64，第二个字节8位，表示[0,255]的取值范围            // 真正的csid的值为64+[0,255]=[64,319]            if (total_bytes < 2)            {                return 1;            }            csid = 64;            csid += *((uint8_t*)(pos + parsed));            parsed++;        }        else if (csid == 1)        {            // 第一个字节后6位取值1，表示csid至少是64，后面两个字节，表示[0,65535]的取值范围            // 真正的csid的值为64+[0,65535]=[64,65599]            if (total_bytes < 3)            {                return 1;            }            csid = 64;            csid += *((uint8_t *)(pos + parsed));            parsed++;            // 网络字节序问题            csid += *((uint8_t *)(pos + parsed)) * 256;            parsed++;            // csid = 64 + BytesReader::ReadUint16T(pos + parsed);            // parsed += 2;        }                int32_t size = total_bytes - parsed;                // Message header        if (size == 0 || (fmt == 0 && size < 11) || (fmt == 1 && size < 7) ||  (fmt == 2 && size < 3) )        {            return 1;        }        // msg 总长        msg_len = 0;        // 流id        msg_sid = 0;        msg_type = 0;        timestamp = 0;        int32_t ts = 0;                RtmpMsgHeaderPtr& prev = in_message_headers_[csid];        if (!prev)        {               prev = std::make_shared<RtmpMsgHeader>();        }        if (fmt == kRtmpFmt0)        {            ts = BytesReader::ReadUint24T(pos + parsed);            timestamp = ts;            in_deltas_[csid] = 0;            parsed += 3;            msg_len = BytesReader::ReadUint24T(pos + parsed);            parsed += 3;            msg_type = BytesReader::ReadUint8T(pos + parsed);            parsed += 1;            // sid 是小端序            memcpy((void *)&msg_sid, (void *)(pos + parsed), 4);            parsed += 4;        }        else if (fmt == kRtmpFmt1)        {            ts = BytesReader::ReadUint24T(pos + parsed);            in_deltas_[csid] = ts;            timestamp = ts + prev ->} timestamp:
- * @param         {  } if:
- * @param         {  } packet:
- * @param         {  } break:
- * @param         {  } break:
- * @param         {  } break:
- * @param         {uint32_t} timestamp:
- * @param         {bool} fmt0:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } memcpy:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } out_deltas_:
- * @param         {  } out_deltas_:
- * @param         {  } p:
- * @param         {  } sending_bufs_:
- * @param         {auto} node:
- * @param         {  } sending_bufs_:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } sending_bufs_:
- * @param         {uint32_t} timestamp:
- * @param         {bool} fmt0:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } memcpy:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } out_deltas_:
- * @param         {  } out_deltas_:
- * @param         {  } p:
- * @param         {  } sending_bufs_:
- * @param         {BufferNodePtr} node:
- * @param         {  } sending_bufs_:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } sending_bufs_:
- * @param         {static_cast<int>(header ->msg_type)                    << " csid :" << header ->} cs_id:
- * @param         {uint32_t} timestamp:
- * @param         {bool} fmt0:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } memcpy:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } out_deltas_:
- * @param         {  } out_deltas_:
- * @param         {  } p:
- * @param         {  } sending_bufs_:
- * @param         {BufferNodePtr} node:
- * @param         {  } sending_bufs_:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } sending_bufs_:
- * @param         {uint32_t} timestamp:
- * @param         {bool} fmt0:
- * @param         {static_cast<int>(header ->msg_type);//     if (!header) //     {//         RTMP_ERROR << "BuildChunk Header is Null !!! \n";//         return false;//     }    //     auto& pre = out_message_headers_[header ->} cs_id:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {RTMP_TRACE << "fmt 0 send packer, type : " << (static_cast<int>(*(uint8_t *)(p - 1)));//         memcpy(p, &header ->} msg_sid:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {RTMP_TRACE << "fmt 0 send packer, type : " << (static_cast<int>(*(uint8_t *)(p - 1)));//         out_deltas_[header ->} cs_id:
- * @param         {  } out_deltas_:
- * @param         {  } p:
- * @param         {  } sending_bufs_:
- * @param         {auto} node:
- * @param         {  } sending_bufs_:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } sending_bufs_:
- * @param         {RTMP_TRACE << " send chunk size : " << out_chunk_size_ << " to host " << connection_ ->} PeerAddr:
- * @param         {RTMP_TRACE << " send ack size : " << ack_size_ << " to host" << connection_ ->} PeerAddr:
- * @param         {  } *p:
- * @param         {RTMP_TRACE << " send ack size : " << ack_size_ << " to host" << connection_ ->} PeerAddr:
- * @param         {uint32_t} value1:
- * @param         {uint32_t} value2:
- * @param         {  } p:
- * @param         {  } if:
- * @param         {  } header:
- * @param         {packet} size:
- * @param         {packet} size:
- * @param         {packet} size:
- * @param         {  } break:
- * @param         {bool} amf3:
- * @param         {RTMP_ERROR << "amf message decode error";        return;    }std::string &method = obj.Property(0)->String();    RTMP_TRACE << "--------AMF command:" << method << " host:" << connection_->PeerAddr().ToIpPort() << " --------- \n";    auto iter = commands_.find(method);    if(iter == commands_.end())    {        RTMP_TRACE << "not surpport method:" << method << " host:" << connection_->PeerAddr().ToIpPort();        return ;    }    iter->second(obj);    RTMP_TRACE << "--------AMF command:" << method << " host:" << connection_->PeerAddr().ToIpPort() << " ----end----- \n";}void RtmpContext::SendConnect(){    SendSetChunkSize();    PacketPtr packet = Packet::NewPacket(1024);    auto header = std::make_shared<RtmpMsgHeader>();    header ->} msg_type:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {Connection} succeeded:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } header:
- * @param         {string} &code:
- * @param         {string} &description:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } header:
- * @param         {  } SendStatus:
- * @param         {Start} Playing:
- * @param         {void} RtmpContext:
- * @param         {  } std:
- * @param         {  } if:
- * @param         {  } session_name_:
- * @param         {  } p:
- * @param         {  } *p:
- * @param         {  } p:
- * @param         {  } header:
- * @param         {Start} Publishing:
- * @param         {void} RtmpContext:
- * @return        {*}
-**/
-/**
  * @FilePath     : /VideoServer/src/mmedia/rtmp/RtmpContext.cpp
  * @Description  :  Imp RtmpContext
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-07-06 20:24:05
+ * @LastEditTime : 2024-07-07 15:55:31
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "mmedia/rtmp/RtmpContext.h"
@@ -161,7 +17,7 @@
 using namespace vdse::mmedia;
 
 RtmpContext::RtmpContext(const TcpConnectionPtr &conn, RtmpCallBack *hanlder, bool client)
-:connection_(conn), handshake_(conn, client), rtmp_callback_(hanlder)
+:connection_(conn), handshake_(conn, client), rtmp_callback_(hanlder), is_client_(client)
 {
     commands_["connect"] = std::bind(&RtmpContext::HandleConnect,this,std::placeholders::_1);
     commands_["createStream"] = std::bind(&RtmpContext::HandleCreateStream,this,std::placeholders::_1);
@@ -186,6 +42,11 @@ int32_t RtmpContext::Parse(MsgBuffer &buf)
         if (ret == 0)
         { 
             state_ = kRtmpMessage;
+            // 如果是客户端 发送连接
+            if(is_client_)
+            {
+                SendConnect();
+            }
             if (buf.ReadableBytes() > 0)
             {
                 RTMP_TRACE << " still has readable bytes : " << buf.ReadableBytes() << "\n";
@@ -217,7 +78,7 @@ int32_t RtmpContext::Parse(MsgBuffer &buf)
 
 void RtmpContext::OnWriteComplete()
 {
-    // RTMP_TRACE << "RtmpContext::OnWriteComplete() , state_ =  " << state_ << " \n";
+    RTMP_TRACE << "RtmpContext::OnWriteComplete() , state_ =  " << state_ << " \n";
     if (state_ == kRtmpHandshake)
     {
         handshake_.WriteComplete();
@@ -1822,6 +1683,7 @@ void RtmpContext::ParseNameAndTcUrl()
         app_ = list[3];
     }
 
+    // 去掉端口号
     auto p = domain.find_first_of(":");
     if(p!=std::string::npos)
     {
@@ -1835,9 +1697,9 @@ void RtmpContext::ParseNameAndTcUrl()
     session_name_ += "/";
     session_name_ += name_;
 
-    RTMP_TRACE << "session_name:" << session_name_ 
-            << " param:" << param_ 
-            << " host:" << connection_->PeerAddr().ToIpPort();
+    RTMP_TRACE << " \n "<< "session_name:" << session_name_  << " \n "
+            << "param:" << param_ << " \n "
+            << "host:" << connection_->PeerAddr().ToIpPort() << " \n ";
 }
 
 void RtmpContext::HandleError(AMFObject &obj)
@@ -1919,20 +1781,21 @@ void RtmpContext::HandlePublish(AMFObject &obj)
         rtmp_callback_->OnPublish(connection_,session_name_,param_);
     }
 }
-// void RtmpContext::Play(const std::string &url)
-// {
-//     is_client_ = true;
-//     is_player_ = true;
-//     tc_url_ = url;
-//     ParseNameAndTcUrl();
-// }
-// void RtmpContext::Publish(const std::string &url) 
-// {
-//     is_client_ = true;
-//     is_player_ = false;
-//     tc_url_ = url;
-//     ParseNameAndTcUrl();
-// }
+
+void RtmpContext::Play(const std::string &url)
+{
+    is_client_ = true;
+    is_player_ = true;
+    tc_url_ = url;
+    ParseNameAndTcUrl();
+}
+void RtmpContext::Publish(const std::string &url) 
+{
+    is_client_ = true;
+    is_player_ = false;
+    tc_url_ = url;
+    ParseNameAndTcUrl();
+}
 
 void RtmpContext::SetPacketType(PacketPtr &packet)
 {

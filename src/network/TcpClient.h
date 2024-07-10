@@ -4,7 +4,7 @@
 #include "network/net/EventLoop.h"
 #include "network/base/InetAddress.h"
 #include <functional>
-
+#include <memory>
 
 namespace vdse
 {
@@ -44,10 +44,9 @@ namespace vdse
                 void ConnectInloop();
                 bool CheckError(); 
                 void UpdateConnectionStatus();
-
-
-
         };
+
+        using TcpClientPtr = std::shared_ptr<TcpClient>;
 
     }
 }

@@ -257,6 +257,8 @@ int32_t RtmpHandshake::CheckC1S1(const char *data, int bytes)
 
 void RtmpHandshake::SendC1S1()
 {
+
+    RTMP_TRACE << "Send C1S1" << "\n";
     connection_->Send((const char *)C1S1_, kRtmpHandshakePacketSize + 1);
 }
 
@@ -304,6 +306,8 @@ void RtmpHandshake::SendC2S2()
 
 int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
 {
+    RTMP_TRACE << "RtmpHandshake::Handshake(MsgBuffer &buf) state : " << state_ << " \n";
+
     switch(state_)
     {
         case KHandshakeWaitC0C1:
@@ -393,7 +397,7 @@ int32_t RtmpHandshake::Handshake(MsgBuffer &buf)
 
 void RtmpHandshake::WriteComplete()
 {
-    RTMP_TRACE << " RtmpHandshake::WriteComplete state_ =  " << state_ ;
+    RTMP_TRACE << " RtmpHandshake::WriteComplete state_ =  " << state_  << "\n";
     
     switch(state_)
     {
