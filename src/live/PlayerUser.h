@@ -25,7 +25,9 @@ namespace vdse
         {
         public:
             friend class Stream;
-            explicit PlayerUser(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s);
+            // 委托构造函数
+            using User::User;
+            // explicit PlayerUser(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s);
 
             PacketPtr Meta() const;
             PacketPtr VideoHeader() const;

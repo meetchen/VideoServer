@@ -4,7 +4,7 @@
 using namespace vdse::live;
 
 User::User(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s)
-:connection_(ptr)
+:connection_(ptr),stream_(stream)
 {
     start_timestamp_ = vdse::base::TTime::NowMS();
     user_id_ = ptr->PeerAddr().ToIpPort();

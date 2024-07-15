@@ -9,15 +9,16 @@
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
 #include "live/PlayerUser.h"
+#include "live/Stream.h"
 
 
 using namespace vdse::live;
 
-PlayerUser::PlayerUser(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s)
-:User(ptr, stream, s)
-{
+// PlayerUser::PlayerUser(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s)
+// :User(ptr, stream, s)
+// {
 
-}
+// }
 
 PacketPtr PlayerUser::Meta() const
 {
