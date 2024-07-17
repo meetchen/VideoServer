@@ -1,11 +1,14 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 22:53:04
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-03 15:38:35
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 16:01:59
  * @FilePath: /VideoServer/src/mmedia/tests/RtmpServerTest.cpp
  * @Description: rtmp 握手实现 测试 
  *               ffmpeg -i ~/Downloads/test.mp4 -c:v copy -c:a copy -f flv rtmp://192.168.159.131:1935/live/test
+ *               ffmpeg -i ~/Downloads/test.mp4 -c:v copy -c:a copy -f flv rtmp://duanran.top/live/test
+ * 
+ *               ffmpeg -i /home/workSpace/video/output.mp4 -c:v copy -c:a copy -f flv rtmp://duanran.top/live/test
  * 
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
@@ -34,7 +37,7 @@ int main(int argc, char const *argv[])
 
     if (loop)
     {
-        InetAddress listen("192.168.159.131:1935");
+        InetAddress listen("0.0.0.0:1935");
         RtmpServer server(loop, listen);
 
         server.Start();

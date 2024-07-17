@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <iostream>
 
 using namespace vdse::base;
 
@@ -45,7 +46,11 @@ bool Config::LoadConfig(const std::string &file)
     {
         cpu_start_ = cpuStartObj.asInt();
     }
-
+    Json::Value cpusObj = root["cpus"];
+    if (!cpusObj.isNull())
+    {
+        cpus_ = cpusObj.asInt();
+    }
     Json::Value threadsObj = root["threads"];
     if (!threadsObj.isNull())
     {
@@ -170,6 +175,7 @@ const ServiceInfoPtr &Config::GetServiceInfo(const string &protocol,const string
 }
 bool Config::ParseServiceInfo(const Json::Value &serviceObj)
 {
+    std::cout << " ParseServiceInfo" << std::endl;
     if(serviceObj.isNull())
     {
         LOG_ERROR << " config no service section!";

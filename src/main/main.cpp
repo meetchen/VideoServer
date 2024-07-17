@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-06-04 11:03:43
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-09 14:46:05
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 17:25:44
  * @FilePath: /VideoServer/src/main/main.cpp
  * @Description: 
  * 
@@ -12,6 +12,7 @@
 #include "base/LogStream.h"
 #include "base/FileMg.h"
 #include "base/TaskMg.h"
+#include "live/LiveService.h"
 #include <stdio.h>
 #include <iostream>
 #include <thread>
@@ -19,12 +20,14 @@
 #include <filesystem>
 
 using namespace vdse::base;
+using namespace vdse::live;
+using namespace vdse::mmedia;
 
 int main(int argc,const char ** argv)
 {
-    g_logger.reset(new Logger(nullptr));
+    g_logger = std::make_shared<Logger>(nullptr);
 
-    g_logger->SetLogLevel(kTrace);
+    g_logger->SetLogLevel(kDebug);
 
     if(!sConfigMg->LoadConfig("../config/config.json"))
     {
@@ -33,6 +36,7 @@ int main(int argc,const char ** argv)
     }
     ConfigPtr config = sConfigMg->GetConfig();
     LogInfoPtr log_info = config->GetLogInfo();
+
     std::cout << "log level:" << log_info->level 
         << " path:" << log_info->path 
         << " name:" << log_info->name 
@@ -46,7 +50,9 @@ int main(int argc,const char ** argv)
         return -1;
     }
     log->SetRotate(log_info->rotate);
-
+    
+    g_logger = std::make_shared<Logger>(log);
+    g_logger->SetLogLevel(log_info->level);
 
 
     TaskPtr task4 = std::make_shared<Task>([](const TaskPtr &task)
@@ -56,6 +62,7 @@ int main(int argc,const char ** argv)
                                         },
                                         1000);      
     sTaskMg->Add(task4); 
+    sLiveService->Start();
     while(1)
     {
         sTaskMg->OnWork();

@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-06-03 15:17:38
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-09 14:41:34
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 14:45:29
  * @FilePath: /VideoServer/src/base/Config.h
  * @Description: 
  * 
@@ -19,6 +19,7 @@
 #include "base/Logger.h"
 #include "base/FileMg.h"
 #include <unordered_map>
+#include "live/LiveService.h"
 
 namespace vdse
 {
@@ -51,6 +52,7 @@ namespace vdse
 
         class Config
         {
+            friend class vdse::live::LiveService;
             public:
                 Config() = default;
                 ~Config() = default;
@@ -74,6 +76,7 @@ namespace vdse
                 LogInfoPtr log_info_;
                 std::string name_;
                 int32_t cpu_start_;
+                int32_t cpus_;
                 int32_t thread_nums_;
                 std::mutex lock_;
 

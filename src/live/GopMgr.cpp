@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 15:36:52
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 15:57:16
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-17 16:16:41
  * @FilePath: /VideoServer/src/live/GopMgr.cpp
  * @Description: 
  * 
@@ -21,6 +21,8 @@ void GopMgr::AddFrame(const PacketPtr &packet)
     lastest_timestamp_ = packet -> TimeStamp();
     if (packet -> IsKeyFrame())
     {
+        LIVE_TRACE << " insert key frame , index = " << packet->Index() << " ts : " << packet -> TimeStamp();
+        gops_.emplace_back(packet->Index(), packet->TimeStamp());
         max_gop_length_ = std::max(max_gop_length_ , gop_length_);
         total_gop_length_ += gop_length_;
         gop_length_ = 0;

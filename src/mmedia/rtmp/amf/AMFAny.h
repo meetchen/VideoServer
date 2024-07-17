@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-04 11:17:10
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-04 19:03:02
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 18:32:27
  * @FilePath: /VideoServer/src/mmedia/rtmp/amf/AMFAny.h
  * @Description: 
  * 
@@ -75,10 +75,10 @@ namespace vdse
 
                 virtual bool IsString();
                 virtual bool IsNumber();
+                virtual bool IsNull();
                 virtual bool IsBoolean();
                 virtual bool IsDate();
                 virtual bool IsObject();
-                virtual bool IsNull();
 
                 /**
                  * @description: 子类弹出一个数据，对应不同的类型

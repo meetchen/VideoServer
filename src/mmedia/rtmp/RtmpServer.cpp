@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-02 19:45:45
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-05 11:09:22
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-17 15:29:55
  * @FilePath: /VideoServer/src/mmedia/rtmp/RtmpServer.cpp
  * @Description: IMP RTMPSERVER.H
  * 
@@ -32,13 +32,14 @@ RtmpServer::~RtmpServer()
 
 void RtmpServer::Start() 
 {
+    // 绑定相关回调
     TcpServer::SetNewConnectionCallBack(std::bind(&RtmpServer::OnNewConneciton, this, std::placeholders::_1));
     TcpServer::SetDestroyConnectionCallBack(std::bind(&RtmpServer::OnDestroyed, this, std::placeholders::_1));
     TcpServer::SetMsgCallBack(std::bind(&RtmpServer::OnMessage, this, std::placeholders::_1, std::placeholders::_2));
     TcpServer::SetWriteCompleteCallBack(std::bind(&RtmpServer::OnWriteComplete, this, std::placeholders::_1));
     TcpServer::SetActiveCallBack(std::bind(&RtmpServer::OnActive, this, std::placeholders::_1));
     TcpServer::Start();
-    RTMP_TRACE << "Rtmp Server Start..\n";
+    RTMP_TRACE << "Bind CallBack and Rtmp Server Start..";
 }
 
 void RtmpServer::Stop() 
@@ -50,7 +51,7 @@ void RtmpServer::Stop()
 //  b /home/duanran/workSpace/VideoServer/src/mmedia/rtmp/RtmpServer.cpp:52
 void RtmpServer::OnNewConneciton(const TcpConnectionPtr &conn)
 {
-    RTMP_TRACE << " RtmpServer::OnNewConneciton(const TcpConnectionPtr &conn) \n";
+    RTMP_TRACE << " RtmpServer::OnNewConneciton(const TcpConnectionPtr &conn)";
     if (rtmp_callback_)
     {
        rtmp_callback_->OnNewConnection(conn);
@@ -79,7 +80,7 @@ void RtmpServer::OnMessage(const TcpConnectionPtr &conn, MsgBuffer &buf)
         // 握手成功
         if (ret == 0)
         {
-            RTMP_TRACE << " host " << conn -> PeerAddr().ToIpPort() << "handshake finish \n";
+            RTMP_TRACE << " host " << conn -> PeerAddr().ToIpPort() << "handshake finish  ";
         }
         else if (ret == -1)
         {

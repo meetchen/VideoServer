@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 16:35:16
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 19:28:19
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 11:12:35
  * @FilePath: /VideoServer/src/live/PlayerUser.h
  * @Description: 消费视频流(提供给子类一个纯虚函数) 时间戳校正
  * 
@@ -26,8 +26,8 @@ namespace vdse
         public:
             friend class Stream;
             // 委托构造函数
-            using User::User;
-            // explicit PlayerUser(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s);
+            // using User::User;
+            explicit PlayerUser(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s);
 
             PacketPtr Meta() const;
             PacketPtr VideoHeader() const;

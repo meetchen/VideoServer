@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-06-03 15:14:36
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-09 11:41:20
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 16:44:12
  * @FilePath: /VideoServer/src/base/LogStream.h
  * @Description: 
  * 
@@ -32,10 +32,11 @@ namespace vdse
             public:
             
                 LogStream(LoggerPtr &loger, const char *file, int line, LogLevel l, const char *func = nullptr);
-                
+
                 /**
-                 * 在析构的时候执行日志的写操作
-                */
+                 * @description: 在析构的时候执行日志的写操作
+                 * @return {*}
+                 */               
                 ~LogStream();
 
                 template<typename T> LogStream & operator<<(const T&value)
@@ -45,7 +46,7 @@ namespace vdse
                 }
             private:
                 std::stringstream stream_;
-                LoggerPtr logger_{nullptr};
+                LoggerPtr logger_;
         };
     }
 }

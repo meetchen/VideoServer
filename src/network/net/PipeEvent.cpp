@@ -1,3 +1,13 @@
+/*
+ * @Author: duanran 995122760@qq.com
+ * @Date: 2024-07-15 10:54:03
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 16:08:52
+ * @FilePath: /VideoServer/src/network/net/PipeEvent.cpp
+ * @Description: 
+ * 
+ * Copyright (c) 2024 by duanran, All Rights Reserved. 
+ */
 #include "PipeEvent.h"
 #include <unistd.h>
 #include "network/base/Network.h"
@@ -42,7 +52,7 @@ void PipeEvent::OnRead()
         NETWORK_ERROR << "pipe read error, error : " << errno;
         return;
     }
-    std::cout << "pipe read temp : " << temp << std::endl;
+    // std::cout << "pipe read temp : " << temp << std::endl;
 }
 
 void PipeEvent::OnError(const std::string &err_msg) 

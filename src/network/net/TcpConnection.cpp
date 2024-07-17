@@ -31,6 +31,7 @@ void TcpConnection::OnClose()
 
 void TcpConnection::ForceClose() 
 {
+    NETWORK_TRACE << "Be ForceClose";
     loop_->RunInLoop([this](){
         OnClose();
     });
@@ -86,7 +87,7 @@ void TcpConnection::OnRead()
         {
             if (err != EINTR && err != EAGAIN && err != EWOULDBLOCK)
             {
-                NETWORK_ERROR << "read err : " << err;
+                NETWORK_ERROR << "read err : " << err << " " << strerror(err);
                 OnClose();
             }
             break;
@@ -270,7 +271,7 @@ void TcpConnection::ExtendLife()
 
 void TcpConnection::OnTimeOut()
 { 
-    NETWORK_ERROR << "host " << peer_addr_.ToIpPort() << "time out and closed.."; 
+    NETWORK_ERROR << " host " << peer_addr_.ToIpPort() << " time out and closed.."; 
     OnClose();
 }
 

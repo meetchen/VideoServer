@@ -1,5 +1,6 @@
 .vscode/
 build/
+bin/
 .gitignore
 third_party/*
 !third_party/jsoncpp
@@ -7,3 +8,4 @@ lib
 bin/sbin/videoserver
 .VSCodeCounter/
 cap/
+command.md

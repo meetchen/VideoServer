@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 18:11:05
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 19:26:50
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-17 16:18:08
  * @FilePath: /VideoServer/src/live/Stream.cpp
  * @Description: 
  * 
@@ -12,6 +12,7 @@
 #include "base/TTime.h"
 #include "live/base/CodecUtils.h" 
 #include "live/base/LiveLog.h"
+#include "live/Session.h"
 
 using namespace vdse::live;
 
@@ -35,6 +36,7 @@ bool Stream::Timeout()
 {
     if (vdse::base::TTime::NowMS() - stream_time_ > 20 * 1000)
     {
+        LIVE_TRACE << "Stream Timeout, stream_time_: " << stream_time_;
         return true;
     }
     return false;
@@ -117,6 +119,12 @@ void Stream::AddPacket(PacketPtr && packet)
     }
 
     stream_time_ = vdse::base::TTime::NowMS();
+
+    auto frame = frame_index_.load();
+    if (frame < 300 || frame % 5 == 0)
+    {
+        session_.ActiveAllPlayers();
+    }
 }
 
 void Stream::GetFrames(const PlayerUserPtr &user)
@@ -161,6 +169,7 @@ void Stream::GetFrames(const PlayerUserPtr &user)
         // 定位GOP
         if (!LocateGop(user))
         {
+            // LIVE_DEBUG << " local gop Failed";
             return;
         }
     }
@@ -186,10 +195,10 @@ bool Stream::LocateGop(const PlayerUserPtr &user)
         // 如果耗时超过1秒 并且还未触发过超时
         if (elapsed > 1000 && !user->wait_timeout_)
         {
-            LIVE_DEBUG << "wait Gop keyFrame timeout, host " << user->user_id_;
+            LIVE_DEBUG << "wait Gop keyFrame timeout, host " << user->user_id_ << " elapsed : "<<elapsed;
             user->wait_timeout_ = true;
         }
-            return false;
+        return false;
     }
 
     // 是否需要发meta
@@ -199,11 +208,13 @@ bool Stream::LocateGop(const PlayerUserPtr &user)
     {
         // 找到距离该idx最近的一个meta
         auto meta = codec_headers_.Meta(idx);
+        LIVE_DEBUG << " need meta, try to find mete";
         if(meta)
         {
             user->wait_meta_ = false;
             user->meta_ = meta;
             user->meta_index_ = meta->Index();
+            LIVE_DEBUG << " need meta and meta in : " << meta->Index();
         }
     }
     
@@ -214,11 +225,15 @@ bool Stream::LocateGop(const PlayerUserPtr &user)
     {
         // 找到距离该idx最近的一个meta
         auto audio = codec_headers_.AudioHeader(idx);
+        LIVE_DEBUG << " need audio, try to find audio";
+
         if(audio)
         {
             user->wait_audio_ = false;
             user->audio_header_ = audio;
             user->audio_header_index_ = audio->Index();
+            LIVE_DEBUG << " need audio and audio in : " << audio->Index();
+
         }
     }
 
@@ -229,11 +244,14 @@ bool Stream::LocateGop(const PlayerUserPtr &user)
     {
         // 找到距离该idx最近的一个meta
         auto video = codec_headers_.VideoHeader(idx);
+        LIVE_DEBUG << " need video, try to find video";
+
         if(video)
         {
             user->wait_video_ = false;
             user->video_header_ = video;
             user->video_header_index_ = video->Index();
+            LIVE_DEBUG << " need video and video in : " << video->Index();
         }
     }
 

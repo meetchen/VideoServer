@@ -16,7 +16,7 @@ using namespace vdse::network;
 TcpServer::TcpServer(EventLoop *loop, const InetAddress &addr)
 :loop_(loop),addr_(addr)
 {
-    acceptor_ =  std::make_shared<Acceptor>(loop, addr);
+    acceptor_ = std::make_shared<Acceptor>(loop, addr);
 }
 
 TcpServer::~TcpServer()

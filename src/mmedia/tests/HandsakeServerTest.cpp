@@ -1,11 +1,12 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 22:53:04
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-05 15:41:19
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 15:43:32
  * @FilePath: /VideoServer/src/mmedia/tests/HandsakeServerTest.cpp
- * @Description: rtmp 握手实现 测试 ffmpeg -i ~/Downloads/test.mp4 -c:v copy -c:a copy -f flv rtmp://192.168.159.131/test
- * 
+ * @Description: rtmp 握手实现 测试 
+ *      ffmpeg -i ~/Downloads/test.mp4 -c:v copy -c:a copy -f flv rtmp://192.168.159.131/test
+ *      sudo ffmpeg -f lavfi -i testsrc=duration=300:size=1280x720:rate=30 output.mp4
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
 #include "network/net/EventLoop.h"
@@ -34,7 +35,7 @@ int main(int argc, char const *argv[])
 
     if (loop)
     {
-        InetAddress listen("192.168.159.131:1935");
+        InetAddress listen("0.0.0.0:1935");
         TcpServer server(loop, listen);
 
         // 设置接受到消息时候的回调

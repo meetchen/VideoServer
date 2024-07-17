@@ -283,11 +283,11 @@ void RtmpHandshake::CreateC2S2(const char *data, int bytes, int offset)
         uint8_t new_key_from_c1s1_digest[32];
         if (is_client_)
         {
-            CalculateDigest(digest_, 32, 0, rtmp_player_key, sizeof(rtmp_player_key), new_key_from_c1s1_digest);
+            CalculateDigest((const uint8_t*)(data+offset), 32, 0, rtmp_player_key, sizeof(rtmp_player_key), new_key_from_c1s1_digest);
         }
         else
         {
-            CalculateDigest(digest_, 32, 0, rtmp_server_key, sizeof(rtmp_server_key), new_key_from_c1s1_digest);
+            CalculateDigest((const uint8_t*)(data+offset), 32, 0, rtmp_server_key, sizeof(rtmp_server_key), new_key_from_c1s1_digest);
         }
         CalculateDigest(C2S2_, kRtmpHandshakePacketSize - 32, 0, new_key_from_c1s1_digest, 32, &C2S2_[kRtmpHandshakePacketSize - 32]);
     }

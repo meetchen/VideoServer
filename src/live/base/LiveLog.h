@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 14:42:49
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 14:44:37
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 16:13:41
  * @FilePath: /VideoServer/src/live/base/LiveLog.h
  * @Description: 
  * 
@@ -16,7 +16,7 @@
 #define LIVE_DEBUG_ON 1
 
 #ifdef LIVE_DEBUG_ON
-#define LIVE_TRACE std::cout << "\nLIVE:"
+#define LIVE_TRACE LOG_TRACE << "LIVE:"
 #define LIVE_DEBUG LOG_DEBUG << "LIVE:"
 #define LIVE_INFO LOG_INFO << "LIVE:"
 #elif

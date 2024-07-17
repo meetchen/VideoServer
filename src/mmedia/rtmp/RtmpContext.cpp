@@ -3,7 +3,7 @@
  * @Description  :  Imp RtmpContext
  * @Author       : Duanran 995122760@qq.com
  * @Version      : 0.0.1
- * @LastEditTime : 2024-07-07 15:55:31
+ * @LastEditTime : 2024-07-17 00:42:44
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2024.
 **/
 #include "mmedia/rtmp/RtmpContext.h"
@@ -34,7 +34,7 @@ RtmpContext::~RtmpContext()
 
 int32_t RtmpContext::Parse(MsgBuffer &buf)
 {
-    RTMP_TRACE << "RtmpContext::Parse(MsgBuffer &buf) state : " << state_ << " \n";
+    // RTMP_TRACE << "RtmpContext::Parse(MsgBuffer &buf) state : " << state_ ;
     int32_t ret = -1;
     if (state_ == kRtmpHandshake)
     {
@@ -49,7 +49,7 @@ int32_t RtmpContext::Parse(MsgBuffer &buf)
             }
             if (buf.ReadableBytes() > 0)
             {
-                RTMP_TRACE << " still has readable bytes : " << buf.ReadableBytes() << "\n";
+                RTMP_TRACE << " still has readable bytes : " << buf.ReadableBytes()  ;
                 return Parse(buf);
             }
         }
@@ -78,7 +78,7 @@ int32_t RtmpContext::Parse(MsgBuffer &buf)
 
 void RtmpContext::OnWriteComplete()
 {
-    RTMP_TRACE << "RtmpContext::OnWriteComplete() , state_ =  " << state_ << " \n";
+    RTMP_TRACE << "RtmpContext::OnWriteComplete() , state_ =  " << state_ ;
     if (state_ == kRtmpHandshake)
     {
         handshake_.WriteComplete();
@@ -101,7 +101,191 @@ void RtmpContext::StartHandshake()
 {
     handshake_.Start();
 }
+int32_t RtmpContext::ParseMessage(MsgBuffer &buf)
+{
+    uint8_t fmt;
+    uint32_t csid,msg_len=0,msg_sid=0;
+    uint8_t msg_type = 0;
+    uint32_t total_bytes = buf.ReadableBytes();
+    int32_t parsed = 0;
 
+    in_bytes_ += (buf.ReadableBytes()-last_left_);
+    SentBytesRecv();
+    
+    while(total_bytes>1)
+    {
+        const char *pos = buf.Peek();
+        parsed = 0;
+        //Basic Header
+        fmt = (*pos>>6)&0x03;
+        csid = *pos&0x3F;
+        parsed++;
+
+        if(csid == 0)
+        {
+            if(total_bytes<2)
+            {
+                return 1;
+            }
+            csid = 64;
+            csid += *((uint8_t*)(pos+parsed));
+            parsed++;
+        }
+        else if( csid == 1)
+        {
+            if(total_bytes<3)
+            {
+                return 1;
+            }
+            csid = 64;
+            csid += *((uint8_t*)(pos+parsed));
+            parsed++;
+            csid +=  *((uint8_t*)(pos+parsed))*256;
+            parsed ++;           
+        }
+
+        int size = total_bytes - parsed;
+        if(size == 0
+            ||(fmt==0&&size<11)
+            ||(fmt==1&&size<7)
+            ||(fmt==2&&size<3))
+        {
+            return 1;
+        }
+
+        msg_len = 0;
+        msg_sid = 0;
+        msg_type = 0;
+        int32_t ts = 0;
+
+        RtmpMsgHeaderPtr &prev = in_message_headers_[csid];
+        if(!prev)
+        {
+            prev = std::make_shared<RtmpMsgHeader>();
+        }
+        msg_len = prev->msg_len;
+        if(fmt == kRtmpFmt0 || fmt == kRtmpFmt1)
+        {
+            msg_len = BytesReader::ReadUint24T((pos+parsed)+3);
+        }
+        else if(msg_len == 0)
+        {
+            msg_len = in_chunk_size_;
+        }
+        PacketPtr &packet = in_packet_[csid];
+        if(!packet)
+        {
+            packet = Packet::NewPacket(msg_len);
+            RtmpMsgHeaderPtr header = std::make_shared<RtmpMsgHeader>();
+            header->cs_id = csid;
+            header->msg_len = msg_len;
+            header->msg_sid = msg_sid;
+            header->msg_type = msg_type;
+            header->timestamp = 0;  
+            packet->SetExt(header);          
+        }
+
+        RtmpMsgHeaderPtr header = packet->Ext<RtmpMsgHeader>();
+
+        if(fmt == kRtmpFmt0)
+        {
+            ts = BytesReader::ReadUint24T(pos+parsed);
+            parsed += 3;
+            in_deltas_[csid] = 0;
+            header->timestamp = ts;
+            header->msg_len = BytesReader::ReadUint24T(pos+parsed);
+            parsed += 3;
+            header->msg_type = BytesReader::ReadUint8T(pos+parsed);
+            parsed += 1;
+            memcpy(&header->msg_sid,pos+parsed,4);
+            parsed += 4;
+        }
+        else if(fmt == kRtmpFmt1)
+        {
+            ts = BytesReader::ReadUint24T(pos+parsed);
+            parsed += 3;
+            in_deltas_[csid] = ts;
+            header->timestamp = ts + prev->timestamp;
+            header->msg_len = BytesReader::ReadUint24T(pos+parsed);
+            parsed += 3;
+            header->msg_type = BytesReader::ReadUint8T(pos+parsed);
+            parsed += 1;
+            header->msg_sid = prev->msg_sid;
+        }
+        else if(fmt == kRtmpFmt2)
+        {
+            ts = BytesReader::ReadUint24T(pos+parsed);
+            parsed += 3;
+            in_deltas_[csid] = ts;
+            header->timestamp = ts + prev->timestamp;
+            header->msg_len = prev->msg_len;
+            header->msg_type = prev->msg_type;
+            header->msg_sid = prev->msg_sid;
+        }    
+        else if(fmt == kRtmpFmt3)
+        {
+            if(header->timestamp == 0)
+            {
+                header->timestamp = in_deltas_[csid] + prev->timestamp;
+            }
+            header->msg_len = prev->msg_len;
+            header->msg_type = prev->msg_type;
+            header->msg_sid = prev->msg_sid;
+        } 
+
+        bool ext = (ts == 0xFFFFFF);
+        if(fmt == kRtmpFmt3)
+        {
+            ext = in_ext_[csid];
+        }
+        in_ext_[csid] = ext;
+        if(ext)
+        {
+            if(total_bytes - parsed < 4)
+            {
+                return 1;
+            }
+            ts = BytesReader::ReadUint32T(pos+parsed);
+            parsed += 4;
+            if(fmt != kRtmpFmt0)
+            {
+                header->timestamp = ts+ prev->timestamp;
+                in_deltas_[csid] = ts;
+            }
+        }
+
+        int bytes = std::min(packet->Space(),in_chunk_size_);
+        if(total_bytes - parsed < bytes)
+        {
+            return 1;
+        }
+
+        const char * body = packet->Data() + packet->PacketSize();
+        memcpy((void*)body,pos+parsed,bytes);
+        packet->UpDatePackSize(bytes);
+        parsed += bytes;
+        
+        buf.Retrieve(parsed);
+        total_bytes -= parsed;
+
+        prev->cs_id = header->cs_id;
+        prev->msg_len = header->msg_len;
+        prev->msg_sid = header->msg_sid;
+        prev->msg_type = header->msg_type;
+        prev->timestamp = header->timestamp;
+
+        if(packet->Space() == 0)
+        {
+            packet->SetPacketType(header->msg_type);
+            packet->SetTimeStamp(header->timestamp);
+            MessageComplete(std::move(packet));
+            packet.reset();
+        }
+    }
+    return 1;
+}
+
+/**
 int32_t RtmpContext::ParseMessage(MsgBuffer &buf)
 {
     uint8_t fmt;
@@ -304,10 +488,10 @@ int32_t RtmpContext::ParseMessage(MsgBuffer &buf)
     }
     return 1;
 }
-
+*/
 void RtmpContext::MessageComplete(PacketPtr &&data)
 {
-    RTMP_TRACE << "recv message type " << data -> PacketType() << " len: " << data -> PacketSize() << std::endl;
+    // RTMP_TRACE << "recv message type " << data -> PacketType() << " len: " << data -> PacketSize();
     
     auto type = data -> PacketType();
     switch (type)
@@ -723,7 +907,7 @@ void RtmpContext::Send()
 
     if (sending_)
     {
-        RTMP_ERROR << "RtmpContext::Send() is sending_ now \n";
+        // RTMP_ERROR << "RtmpContext::Send() is sending_ now \n";
         return;
     }
     sending_ = true;
@@ -736,12 +920,12 @@ void RtmpContext::Send()
         }
         PacketPtr packet = std::move(out_waiting_queue_.front());
         out_waiting_queue_.pop_front();
-        auto header = packet->Ext<RtmpMsgHeader>();
+        // auto header = packet->Ext<RtmpMsgHeader>();
 
-        RTMP_TRACE << "send packer, type : " << static_cast<int>(header ->msg_type)
-                    << " csid :" << header -> cs_id
-                    << " stream id " << header->msg_sid
-                    << " \n";
+        // RTMP_TRACE << "send packer, type : " << static_cast<int>(header ->msg_type)
+        //             << " csid :" << header -> cs_id
+        //             << " stream id " << header->msg_sid
+        //             ;
 
         auto ret = BuildChunk(std::move(packet));
         // if (!ret)
@@ -1175,7 +1359,7 @@ void RtmpContext::SendSetChunkSize()
 
     auto p = packet->Data();
     packet -> SetPacketSize(BytesWriter::WriteUint32T(p, out_chunk_size_));
-    RTMP_TRACE << " send chunk size : " << out_chunk_size_ << " to host " << connection_ -> PeerAddr().ToIpPort() << " \n";
+    RTMP_TRACE << " send chunk size : " << out_chunk_size_ << " to host " << connection_ -> PeerAddr().ToIpPort() ;
     PushOutQueue(std::move(packet));
 }
 
@@ -1196,7 +1380,7 @@ void RtmpContext::SendAckWindowSize()
 
     auto p = packet->Data();
     packet -> SetPacketSize(BytesWriter::WriteUint32T(p, ack_size_));
-    RTMP_TRACE << " send ack size : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort() << " \n";
+    RTMP_TRACE << " send ack size : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort() ;
     PushOutQueue(std::move(packet));
 }
 
@@ -1205,7 +1389,6 @@ void RtmpContext::SendSetPeerBandwidth()
     auto packet = Packet::NewPacket(64);
     RtmpMsgHeaderPtr header = std::make_shared<RtmpMsgHeader>();
 
-    packet->SetExt(header);
 
     if (header)
     {
@@ -1214,24 +1397,22 @@ void RtmpContext::SendSetPeerBandwidth()
         header -> msg_len = 5;
         header -> timestamp = 0;
         header -> msg_type = kRtmpMsgTypeSetPeerBW;
+        packet->SetExt(header);
     }
 
     auto p = packet->Data();
     p += BytesWriter::WriteUint32T(p, ack_size_);
     *p++ = 0x02;
     packet -> SetPacketSize(5);
-    RTMP_TRACE << " send band width : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort() << " \n";
+    RTMP_TRACE << " send band width : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort() ;
     PushOutQueue(std::move(packet));
 }
 
 void RtmpContext::SentBytesRecv()
 {
-    RTMP_TRACE << " void RtmpContext::SentBytesRecv() " << "\n";
     // 超过窗口大小
     if (in_bytes_ >= ack_size_)
     {
-        RTMP_TRACE << " void RtmpContext::SentBytesRecv() in " << "\n";
-
         auto packet = Packet::NewPacket(64);
         RtmpMsgHeaderPtr header = std::make_shared<RtmpMsgHeader>();
 
@@ -1243,11 +1424,13 @@ void RtmpContext::SentBytesRecv()
             header -> msg_len = 4;
             header -> msg_type = kRtmpMsgTypeBytesRead;
             header -> timestamp = 0;
+           packet->SetExt(header);
+
         }
 
         auto p = packet->Data();
         packet -> SetPacketSize(BytesWriter::WriteUint32T(p, in_bytes_));
-        RTMP_TRACE << " send ack size : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort() << " \n";
+        RTMP_TRACE << " send ack size : " << ack_size_ << " to host" << connection_ -> PeerAddr().ToIpPort();
         PushOutQueue(std::move(packet));
         in_bytes_ = 0;
     }
@@ -1256,26 +1439,29 @@ void RtmpContext::SentBytesRecv()
 
 void RtmpContext::SendUserCtrlMessage(short nType, uint32_t value1, uint32_t value2)
 {
-    auto packet = Packet::NewPacket(32);
-    auto header = packet->Ext<RtmpMsgHeader>();
+    auto packet = Packet::NewPacket(64);
+    RtmpMsgHeaderPtr header = std::make_shared<RtmpMsgHeader>();
+
     if (header)
     {
         header -> cs_id = kRtmpCSIDCommand;
         header -> timestamp = 0;
         header -> msg_sid = kRtmpMsID0;
-        header -> msg_len = 6;
-        header -> msg_type = kRtmpMsgTypeWindowACKSize;
+        header -> msg_len = 0;
+        header -> msg_type = kRtmpMsgTypeUserControl;
+        packet->SetExt(header);
     }
 
-    auto p = packet->Data();
-    auto temp = p;
-    p += BytesWriter::WriteUint16T(p, nType);
-    p += BytesWriter::WriteUint32T(p, value1);
+    char* body = packet->Data();
+    char* p = body;
+    p += BytesWriter::WriteUint16T(body, nType);
+    p += BytesWriter::WriteUint32T(body, value1);
     if (nType == kRtmpEventTypeSetBufferLength)
     {
-        p += BytesWriter::WriteUint32T(p, value2);
-        header -> msg_len += 4;
+        p += BytesWriter::WriteUint32T(body, value2);
     }
+    header -> msg_len = p - body;
+
     packet -> SetPacketSize(header -> msg_len);
     RTMP_DEBUG << " send ctrl msg : "
                 << " ntype :" << nType
@@ -1289,13 +1475,13 @@ void RtmpContext::HandleChunkSize(PacketPtr& packet)
 {
     if (packet -> PacketSize() < 4)
     {
-        RTMP_TRACE << " handle chunk size errror, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort() << " \n";
+        RTMP_TRACE << " handle chunk size errror, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort() ;
         return; 
     }
 
     auto size = BytesReader::ReadUint32T(packet->Data());
 
-    RTMP_TRACE << " in chunk size change from : " << in_chunk_size_ << " to " << size << "\n";
+    RTMP_TRACE << " in chunk size change from : " << in_chunk_size_ << " to " << size  ;
 
     in_chunk_size_ = size;
     
@@ -1305,13 +1491,13 @@ void RtmpContext::HandleAckWindowSize(PacketPtr &packet)
 {
     if (packet -> PacketSize() < 4)
     { 
-        RTMP_ERROR << " handle  ack error, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort() << " \n";
+        RTMP_ERROR << " handle  ack error, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort() ;
         return; 
     }
 
     auto size = BytesReader::ReadUint32T(packet->Data());
 
-    RTMP_TRACE << " in ack size change from : " << ack_size_ << " to " << size << " \n";
+    RTMP_TRACE << " in ack size change from : " << ack_size_ << " to " << size ;
 
     ack_size_ = size;
 }
@@ -1322,7 +1508,7 @@ void RtmpContext::HandleUserMessage(PacketPtr &packet)
 
     if (msg_len < 6)
     {
-        RTMP_ERROR << " handle UserMessage error, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort() << " \n";
+        RTMP_ERROR << " handle UserMessage error, packet size : " << packet -> PacketSize() << connection_->PeerAddr().ToIpPort();
         return; 
     }
 
@@ -1334,22 +1520,22 @@ void RtmpContext::HandleUserMessage(PacketPtr &packet)
     {
         case kRtmpEventTypeStreamBegin:
         {
-            RTMP_TRACE << "recv stream begin value" << value << " host:" << connection_->PeerAddr().ToIpPort() << " \n";
+            RTMP_TRACE << "recv stream begin value" << value << " host:" << connection_->PeerAddr().ToIpPort();
             break;
         }
         case kRtmpEventTypeStreamEOF:
         {
-            RTMP_TRACE << "recv stream eof value" << value << " host:" << connection_->PeerAddr().ToIpPort() << " \n";
+            RTMP_TRACE << "recv stream eof value" << value << " host:" << connection_->PeerAddr().ToIpPort();
             break;
         }   
         case kRtmpEventTypeStreamDry:
         {
-            RTMP_TRACE << "recv stream dry value" << value << " host:" << connection_->PeerAddr().ToIpPort() << " \n";
+            RTMP_TRACE << "recv stream dry value" << value << " host:" << connection_->PeerAddr().ToIpPort() ;
             break;
         }
         case kRtmpEventTypeSetBufferLength:
         {
-            RTMP_TRACE << "recv set buffer length value" << value << " host:" << connection_->PeerAddr().ToIpPort() << " \n";
+            RTMP_TRACE << "recv set buffer length value" << value << " host:" << connection_->PeerAddr().ToIpPort();
             if(msg_len<10)
             {
                 RTMP_ERROR << "invalid user control packet msg_len:" << packet->PacketSize()
@@ -1360,18 +1546,18 @@ void RtmpContext::HandleUserMessage(PacketPtr &packet)
         }   
         case kRtmpEventTypeStreamsRecorded:
         {
-            RTMP_TRACE << "recv stream recoded value" << value << " host:" << connection_->PeerAddr().ToIpPort() << " \n";
+            RTMP_TRACE << "recv stream recoded value" << value << " host:" << connection_->PeerAddr().ToIpPort();
             break;
         }
         case kRtmpEventTypePingRequest:
         {
-            RTMP_TRACE << "recv ping request value" << value << " host:" << connection_->PeerAddr().ToIpPort() << " \n";
+            RTMP_TRACE << "recv ping request value" << value << " host:" << connection_->PeerAddr().ToIpPort() ;
             SendUserCtrlMessage(kRtmpEventTypePingResponse,value,0);
             break;
         }   
         case kRtmpEventTypePingResponse:
         {
-            RTMP_TRACE << "recv ping response value" << value << " host:" << connection_->PeerAddr().ToIpPort() << " \n";
+            RTMP_TRACE << "recv ping response value" << value << " host:" << connection_->PeerAddr().ToIpPort() ;
             break;
         }
         default:
@@ -1394,24 +1580,24 @@ void RtmpContext::HandleAMFMessage(PacketPtr &packet, bool amf3)
     AMFObject obj;
     if (obj.Decode(body, msg_len) < 0)
     {
-        RTMP_ERROR << "amf message decode error" << " \n";
+        RTMP_ERROR << "amf message decode error" ;
         return;
     }
     const std::string &method = obj.Property(0)->String();
-    RTMP_TRACE << " -------handler AMF message : " << connection_ -> PeerAddr().ToIpPort() << " ------\n";
+    RTMP_TRACE << " -------handler AMF message : " << connection_ -> PeerAddr().ToIpPort() << " ------";
 
 
-    RTMP_TRACE << "--------AMF command: " << method << " host:" << connection_->PeerAddr().ToIpPort() << " --------- \n";
+    RTMP_TRACE << "--------AMF command: " << method << " host:" << connection_->PeerAddr().ToIpPort() << " --------- ";
 
     auto iter = commands_.find(method);
     if(iter == commands_.end())
     {
-        RTMP_TRACE << " not surpport method: " << method << " host:" << connection_->PeerAddr().ToIpPort() << " --------- \n";
+        RTMP_TRACE << " not surpport method: " << method << " host:" << connection_->PeerAddr().ToIpPort() << " --------- ";
         return ;
     }
     iter->second(obj);
 
-    RTMP_TRACE << "--------AMF command:" << method << " host:" << connection_->PeerAddr().ToIpPort() << " ----end----- \n";
+    RTMP_TRACE << "--------AMF command:" << method << " host:" << connection_->PeerAddr().ToIpPort() << " ----end----- ";
 
 
 }
@@ -1473,7 +1659,7 @@ void RtmpContext::HandleConnect(AMFObject &obj)
     // app_ = obj.Property("app")->String();
     // amf3 = obj.Property("objectEncoding")->Number() == 3.0;
     
-    RTMP_TRACE << "----responce connect tcUrl:" << tc_url_ << " app: " << app_ << " amf3:"  << amf3 << " -----\n";
+    RTMP_TRACE << "----responce connect tcUrl:" << tc_url_ << " app: " << app_ << " amf3:"  << amf3 << " -----";
 
     SendAckWindowSize();
 
@@ -1517,7 +1703,7 @@ void RtmpContext::HandleConnect(AMFObject &obj)
     header->msg_len = p - body;
     packet->SetPacketSize(header->msg_len);
     PushOutQueue(std::move(packet));
-    RTMP_TRACE << "----connect responce rtmp connec msg_len:" << header->msg_len << " from host:" << connection_->PeerAddr().ToIpPort() << " -------\n";
+    RTMP_TRACE << "----connect responce rtmp connec msg_len:" << header->msg_len << " from host:" << connection_->PeerAddr().ToIpPort() << " -------";
 
 
 }
@@ -1548,7 +1734,7 @@ void RtmpContext::SendCreateStream()
 
 void RtmpContext::HandleCreateStream(AMFObject &obj)
 {
-    RTMP_TRACE << " RtmpContext::HandleCreateStream(AMFObject &obj) " << "\n";
+    RTMP_TRACE << " RtmpContext::HandleCreateStream(AMFObject &obj) "  ;
     auto tran_id = obj.Property(1)->Number();
 
     PacketPtr packet = Packet::NewPacket(1024);
@@ -1640,9 +1826,9 @@ void RtmpContext::HandlePlay(AMFObject &obj)
     name_ = obj.Property(3)->String();
     ParseNameAndTcUrl();
 
-    RTMP_TRACE << "recv play session_name:" << session_name_ 
-            << " param:" << param_ 
-            << " host:" << connection_->PeerAddr().ToIpPort();
+    RTMP_TRACE << "recv play session_name: " << session_name_ 
+            << " param: " << param_ 
+            << " host: " << connection_->PeerAddr().ToIpPort();
     is_player_ = true;
     SendUserCtrlMessage(kRtmpEventTypeStreamBegin,1,0);
     SendStatus("status","NetStream.Play.Start","Start Playing");
@@ -1672,15 +1858,20 @@ void RtmpContext::ParseNameAndTcUrl()
     std::string domain;
 
     std::vector<std::string> list = base::StringUtils::SplitString(tc_url_,"/");
-    if(list.size()==5)//rmtp://ip/domain:port/app
+    // if(list.size()==5)//rmtp://ip/domain:port/app
+    // {
+    //     domain = list[3];
+    //     app_ = list[4];
+    // }
+    // else if(list.size() == 4) //rmtp://domain:port/app
+    // {
+    //     domain = list[2];
+    //     app_ = list[3];
+    // }
+    if(list.size() == 3) //rmtp://domain:port/app
     {
-        domain = list[3];
-        app_ = list[4];
-    }
-    else if(list.size() == 4) //rmtp://domain:port/app
-    {
-        domain = list[2];
-        app_ = list[3];
+        domain = list[1];
+        app_ = list[2];
     }
 
     // 去掉端口号
@@ -1697,9 +1888,9 @@ void RtmpContext::ParseNameAndTcUrl()
     session_name_ += "/";
     session_name_ += name_;
 
-    RTMP_TRACE << " \n "<< "session_name:" << session_name_  << " \n "
-            << "param:" << param_ << " \n "
-            << "host:" << connection_->PeerAddr().ToIpPort() << " \n ";
+    RTMP_TRACE << " session_name: " << session_name_  
+            << " param: " << param_ 
+            << " host: " << connection_->PeerAddr().ToIpPort();
 }
 
 void RtmpContext::HandleError(AMFObject &obj)
@@ -1770,9 +1961,9 @@ void RtmpContext::HandlePublish(AMFObject &obj)
     name_ = obj.Property(3)->String();
     ParseNameAndTcUrl();
 
-    RTMP_TRACE << "recv publish session_name:" << session_name_ 
-            << " param:" << param_ 
-            << " host:" << connection_->PeerAddr().ToIpPort();
+    RTMP_TRACE << "recv publish session_name: " << session_name_ 
+            << " param: " << param_ 
+            << " host: " << connection_->PeerAddr().ToIpPort();
     is_player_ = false;
     SendStatus("status","NetStream.Publish.Start","Start Publishing");
 

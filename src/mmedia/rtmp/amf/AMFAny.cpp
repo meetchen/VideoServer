@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-04 11:19:14
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-05 17:51:15
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 17:20:04
  * @FilePath: /VideoServer/src/mmedia/rtmp/amf/AMFAny.cpp
  * @Description: 所有amf的基类 提供通用的方法
  * 
@@ -142,9 +142,6 @@ std::string AMFAny:: DecodeString(const char *data)
 {
 
     auto len = BytesReader::ReadUint16T(data);
-    std::cout  << "DecodeSting len : " << len << std::endl;
-    // std::printf(" data: %s", data + 2);
-    // std::cout  << "-----" << std::endl;
 
     if (len > 0)
     {

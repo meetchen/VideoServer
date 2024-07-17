@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 17:13:11
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 17:15:08
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 11:12:22
  * @FilePath: /VideoServer/src/live/PlayerUser.cpp
  * @Description: 
  * 
@@ -14,11 +14,11 @@
 
 using namespace vdse::live;
 
-// PlayerUser::PlayerUser(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s)
-// :User(ptr, stream, s)
-// {
+PlayerUser::PlayerUser(const ConnectionPtr &ptr,const StreamPtr &stream,const SessionPtr &s)
+:User(ptr, stream, s)
+{
 
-// }
+}
 
 PacketPtr PlayerUser::Meta() const
 {

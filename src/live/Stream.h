@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 18:04:16
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 19:05:30
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-16 11:35:14
  * @FilePath: /VideoServer/src/live/Stream.h
  * @Description: 完成视频流的录入与推出，缓存
  * 
@@ -44,7 +44,9 @@ namespace vdse
                 * @return {*}
                 */            
                 int64_t DataTime() const ;
+                
                 const std::string &SessionName() const ;
+
                 int32_t StreamVersion() const;
 
                 /**
@@ -52,6 +54,7 @@ namespace vdse
                 * @return {*}
                 */            
                 bool HasMedia() const;
+
                 bool Ready() const;
                 
                 /**
