@@ -9,7 +9,7 @@
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
  */
 #include "network/net/Connection.h"
-
+#include "network/base/Network.h"
 using namespace vdse::network;
 
 
@@ -52,6 +52,7 @@ void Connection::SetContext(int type, ContextPtr &&context)
 
 void Connection::ClearContext(int type)
 {
+    NETWORK_DEBUG << "clear context, type : " << type;
     contexts_[type].reset();
 }
 

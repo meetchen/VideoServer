@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 15:25:42
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 18:58:24
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-17 17:58:36
  * @FilePath: /VideoServer/src/live/GopMgr.h
  * @Description:  关于GOP，即两个I帧之间的所有帧，因为视频发送的首帧需要是I帧
  * 
@@ -66,8 +66,9 @@ namespace vdse
                     return lastest_timestamp_;
                 }
             private:
-            
+                // 保存gop
                 std::vector<GopItemInfo> gops_;
+                
                 int32_t gop_length_{0};
                 int32_t max_gop_length_{0};
                 int32_t gop_number_{0};

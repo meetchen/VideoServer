@@ -1,8 +1,8 @@
 <!--
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-06-30 18:27:36
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-04 20:09:24
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-17 19:16:21
  * @FilePath: /VideoServer/readme.md
  * @Description: 
  * 
@@ -81,5 +81,11 @@
     - [RtmpContext.cpp](src/mmedia/rtmp/RtmpContext.cpp)
         - ParseMessage：259 while 循环中每次未将parsed置为0，导致解析非法数据 [ gdb wireshake]
 - cpp多线程gdb太痛苦了
+#### 2024-7-15
+- 完成直播管理模块
+    - [Stream.cpp](src/live/Stream.cpp)保存一路实时流，保存推流，用于拉流播放
+    - [RtmpPlayUser.cpp](src/live/RtmpPlayUser.cpp)作为子类，实现了对于RTMP的播放逻辑
+    - [Session.cpp](src/live/Session.cpp)使用域名+app名，作为域名id，唯一表示一个会话，保存该会话的流，推流用户（唯一），播放用户（不唯一）
+    - [LiveService.cpp](src/live/LiveService.cpp)基于以上几种，综合形成直播服务器，完成直播流的推流，与拉流
 
     

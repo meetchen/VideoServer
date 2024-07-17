@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 19:03:58
  * @LastEditors: duanran 995122760@qq.com
- * @LastEditTime: 2024-07-16 16:15:09
+ * @LastEditTime: 2024-07-17 18:44:41
  * @FilePath: /VideoServer/src/mmedia/base/MMediaLog.h
  * @Description: 使用base定义的日志模块
  * 
@@ -25,5 +25,5 @@
 #define RTMP_INFO if(0) LOG_INFO
 #endif
 
-#define RTMP_WARN LOG_WARN
-#define RTMP_ERROR LOG_ERROR
+#define RTMP_WARN LOG_WARN << "RTMP:"
+#define RTMP_ERROR LOG_ERROR << "RTMP:"

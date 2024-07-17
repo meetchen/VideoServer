@@ -2,7 +2,7 @@
  * @Author: duanran 995122760@qq.com
  * @Date: 2024-07-15 14:18:00
  * @LastEditors: duanran 995122760@qq.com
- * @LastEditTime: 2024-07-17 14:32:49
+ * @LastEditTime: 2024-07-17 18:54:40
  * @FilePath: /VideoServer/src/live/RtmpPlayUser.cpp
  * @Description: 
  * 
@@ -26,6 +26,7 @@ RtmpPlayUser::RtmpPlayUser(const ConnectionPtr &ptr,const StreamPtr &stream,cons
 
 bool RtmpPlayUser::PostFrames()
 {
+    RTMP_DEBUG << " meta " << meta_ << " audio_header " << audio_header_ << " video header " << video_header_ << " out size :" << out_frames_.size();
     if (!stream_->Ready() || !stream_->HasMedia())
     {
         RTMP_DEBUG << " stream Ready :" << stream_->Ready() << " stream has media : " << stream_->HasMedia();
@@ -44,6 +45,7 @@ bool RtmpPlayUser::PostFrames()
         }
         else
         {
+            RTMP_DEBUG << " PushFrame meta failed  host : " << user_id_;
             return false;
         }
 
@@ -58,6 +60,7 @@ bool RtmpPlayUser::PostFrames()
         }
         else
         {
+            RTMP_DEBUG << " PushFrame audio_header_ failed  host : " << user_id_;
             return false;
         }
     }
@@ -71,6 +74,7 @@ bool RtmpPlayUser::PostFrames()
         }
         else
         {
+            RTMP_DEBUG << " PushFrame video_header_ failed  host : " << user_id_;
             return false;
         }
     }
@@ -83,6 +87,7 @@ bool RtmpPlayUser::PostFrames()
         }
         else
         {
+            RTMP_DEBUG << " PushFrame out_frames_ failed  host : " << user_id_;
             return false;
         }
     }
@@ -103,8 +108,16 @@ UserType RtmpPlayUser::GetUserType() const
 bool RtmpPlayUser::PushFrame(PacketPtr & packet, bool is_header)
 {
     auto cx = connection_->GetContext<RtmpContext>(kRtmpContext);
-    if (!cx || cx->Ready())
+    if (!cx || !cx->Ready())
     {
+        if (!cx)
+        {
+            RTMP_ERROR << " don't have RtmpContext!!!!";
+        }
+        else
+        {
+            RTMP_ERROR << " have RtmpContext!!!! " << " cx-ready : " << cx->Ready();
+        }
         return false;
     }
     auto ts = 0;
@@ -115,6 +128,7 @@ bool RtmpPlayUser::PushFrame(PacketPtr & packet, bool is_header)
     auto ret = cx->BuildChunk(packet, ts, is_header);
     if (!ret) 
     {
+        RTMP_DEBUG << "build chunk failed";
         return false;
     }
     cx->Send();
@@ -124,8 +138,16 @@ bool RtmpPlayUser::PushFrame(PacketPtr & packet, bool is_header)
 bool RtmpPlayUser::PushFrames(std::vector<PacketPtr> & packets)
 {
     auto cx = connection_->GetContext<RtmpContext>(kRtmpContext);
-    if (!cx || cx->Ready())
+    if (!cx || !cx->Ready())
     {
+        if (!cx)
+        {
+            RTMP_ERROR << " don't have RtmpContext";
+        }
+        else
+        {
+            RTMP_ERROR << " have RtmpContext!!!! " << " cx-ready : " << cx->Ready();
+        }
         return false;
     }
     for (auto &packet : packets)

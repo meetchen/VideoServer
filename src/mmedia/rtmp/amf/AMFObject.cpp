@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-04 14:42:41
  * @LastEditors: duanran 995122760@qq.com
- * @LastEditTime: 2024-07-17 16:08:25
+ * @LastEditTime: 2024-07-17 17:13:01
  * @FilePath: /VideoServer/src/mmedia/rtmp/amf/AMFObject.cpp
  * @Description: 
  * 
@@ -48,7 +48,7 @@ int AMFObject::Decode(const char *data, int size, bool has)
     std::string nname;
     int32_t parsed = 0;
 
-    while (parsed + 3 <= size)
+    while (parsed + 3 < size)
     {
         if (BytesReader::ReadUint24T(data) == 0x000009)
         {
@@ -218,7 +218,7 @@ int AMFObject::Decode(const char *data, int size, bool has)
             }
             default:
             {
-                RTMP_TRACE << " unsupport type : " << type    ; 
+                RTMP_TRACE << " unsupport type : " << type ; 
                 break;
             }
         }

@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 18:11:05
  * @LastEditors: duanran 995122760@qq.com
- * @LastEditTime: 2024-07-17 16:18:08
+ * @LastEditTime: 2024-07-17 18:18:53
  * @FilePath: /VideoServer/src/live/Stream.cpp
  * @Description: 
  * 
@@ -76,7 +76,8 @@ void Stream::AddPacket(PacketPtr && packet)
 
         if (packet->IsVideo() && CodecUtils::IsKeyFrame(packet))
         {
-            packet->SetPacketType(kPacketTypeAudio | kFrameTypeKeyFrame);
+            LIVE_TRACE << " get a video and key frame packet, index = " << index;
+            packet->SetPacketType(kPacketTypeVideo | kFrameTypeKeyFrame);
             SetReady(true);
         }
 
@@ -85,22 +86,30 @@ void Stream::AddPacket(PacketPtr && packet)
             codec_headers_.ParseCodecHeader(packet);
             if (packet -> IsVideo())
             {
+                LIVE_TRACE << " get a video frame packet";
                 has_video_ = true;
                 stream_version_++;
             }
             else if (packet -> IsAudio())
             {
+                LIVE_TRACE << " get a audio frame packet";
                 has_audio_ = true;
                 stream_version_ ++;
             }
             else if (packet -> IsMeta())
             {
+                LIVE_TRACE << " get a meta frame packet";
                 has_meta_ = true;
                 stream_version_++;
             }
         }
 
         gop_mgr_.AddFrame(packet);
+        
+        if (index % 500 ==  0)
+        {
+           LIVE_TRACE << " add packets , index = " << index;
+        }
 
         packet_buffer_[index % packet_buffer_size_] = std::move(packet);
         
@@ -336,6 +345,11 @@ void Stream::GetNextFrame(const PlayerUserPtr &user)
 {
     auto idx = user->out_index_ + 1;
     auto max_idx = frame_index_.load();
+    
+    LIVE_TRACE << "get next frame, idx = " << idx 
+                << " max_idx = " << max_idx
+                << " out_frames_ has " << user->out_frames_.size();
+
     for(int i = 0;i < 10;i++)
     {
         if(idx>max_idx)
@@ -355,6 +369,9 @@ void Stream::GetNextFrame(const PlayerUserPtr &user)
             break;
         }
     }
+    LIVE_TRACE << "get next frame, idx = " << idx 
+                << " max_idx = " << max_idx
+                << " out_frames_ has " << user->out_frames_.size();
 }
 
 void Stream::SetReady(bool ready)
