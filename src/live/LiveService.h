@@ -2,7 +2,7 @@
  * @Author: duanran 995122760@qq.com
  * @Date: 2024-07-16 10:21:45
  * @LastEditors: duanran 995122760@qq.com
- * @LastEditTime: 2024-07-16 18:58:28
+ * @LastEditTime: 2024-08-12 22:39:12
  * @FilePath: /VideoServer/src/live/LiveService.h
  * @Description: 直播业务的管理类
  * 
@@ -22,6 +22,7 @@
 #include "base/TaskMg.h"
 #include "base/NoCopyable.h"
 #include "mmedia/base/MMediaCallBack.h"
+#include "mmedia/http/HttpCallBack.h"
 #include "base/Singleton.h"
 
 
@@ -35,7 +36,7 @@ namespace vdse
         using namespace vdse::network;
         using namespace vdse::base;
 
-        class LiveService : public vdse::mmedia::RtmpCallBack
+        class LiveService : public vdse::mmedia::RtmpCallBack, vdse::mmedia::HttpCallBack
         {
             public:
                 LiveService() = default;
@@ -53,6 +54,10 @@ namespace vdse
                 void OnRecv(const TcpConnectionPtr &conn ,PacketPtr &&data) override;
                 bool OnPlay(const TcpConnectionPtr &conn, const std::string &session_name, const std::string &param) override;
                 bool OnPublish(const TcpConnectionPtr &conn, const std::string &session_name, const std::string &param) override;
+
+                void OnSent(const TcpConnectionPtr &conn);
+                bool OnSentNextChunk(const TcpConnectionPtr &conn);   
+                void OnRequest(const TcpConnectionPtr &conn,const HttpRequestPtr &req,const PacketPtr &packet); 
 
                 void Start();
                 void Stop();

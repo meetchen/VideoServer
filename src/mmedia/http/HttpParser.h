@@ -1,0 +1,77 @@
+/*
+ * @Author: duanran 995122760@qq.com
+ * @Date: 2024-07-23 15:33:06
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-07-23 15:52:07
+ * @FilePath: /VideoServer/src/mmedia/http/HttpParser.h
+ * @Description: 解析Http
+ * 
+ * Copyright (c) 2024 by duanran, All Rights Reserved. 
+ */
+#pragma once
+
+#include "mmedia/base/Packet.h"
+#include "mmedia/http/HttpTypes.h"
+#include "mmedia/http/HttpRequest.h"
+#include "network/base/MsgBuffer.h"
+#include <unordered_map>
+
+
+namespace vdse
+{
+    namespace mmedia
+    {   
+        using namespace vdse::network;
+        
+        enum HttpParserState
+        {
+            kExpectHeaders,
+            kExpectNormalBody,
+            kExpectStreamBody,
+            kExpectHttpComplete,
+            kExpectChunkLen,
+            kExpectChunkBody,
+            kExpectChunkComplete,
+            kExpectLastEmptyChunk,
+
+            kExpectContinue,
+            kExpectError,
+        };
+
+        using HttpRequestPtr = std::shared_ptr<HttpRequest>;
+
+                class HttpParser
+        {
+        public:
+            HttpParser() = default;
+            ~HttpParser() = default;
+
+            HttpParserState Parse(MsgBuffer &buf);
+            const PacketPtr &Chunk() const ;
+            HttpStatusCode Reason() const;
+            void ClearForNextHttp();
+            void ClearForNextChunk();
+            HttpRequestPtr GetHttpRequest() const 
+            {
+                return req_;
+            }
+        private:
+            void ParseStream(MsgBuffer &buf);
+            void ParseNormalBody(MsgBuffer &buf);
+            void ParseChunk(MsgBuffer &buf);
+            void ParseHeaders();
+            void ProcessMethodLine(const std::string &line);
+
+            HttpParserState state_{kExpectHeaders};
+            int32_t current_chunk_length_{0};
+            int32_t current_content_length_{0};
+            bool is_stream_{false};
+            bool is_chunked_{false};
+            bool is_request_{true};
+            HttpStatusCode reason_{kUnknown};
+            std::string header_;
+            PacketPtr chunk_;
+            HttpRequestPtr req_;
+        };
+    }
+}

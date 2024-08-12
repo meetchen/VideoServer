@@ -5,6 +5,10 @@
 #include "base/Task.h"
 #include "base/TTime.h"
 #include "mmedia/rtmp/RtmpServer.h"
+#include "mmedia/http/HttpServer.h"
+#include "mmedia/http/HttpUtils.h"
+#include "mmedia/http/HttpContext.h"
+#include <iostream>
 
 
 using namespace vdse::live;
@@ -220,15 +224,22 @@ void LiveService::Start()
     auto services = config->GetServiceInfos();
     auto loops = pool_->GetLoops();
 
-    
     for (auto &lp : loops)
     {
         for (auto &service : services)
         {
+
             if (service->protocol == "RTMP" || service->protocol == "rtmp")
             {
                 InetAddress local(service->addr, service->port);
                 RtmpServer *server = new RtmpServer(lp, local, this);
+                servers_.push_back(server);
+                servers_.back()->Start();
+            }
+            else if (service->protocol == "HTTP" || service->protocol == "http")
+            {
+                InetAddress local(service->addr, service->port);
+                auto server = new HttpServer(lp, local, this);
                 servers_.push_back(server);
                 servers_.back()->Start();
             }
@@ -246,4 +257,129 @@ void LiveService::Stop()
 EventLoop* LiveService::GetNextLoop()
 {
     return pool_->GetNextLoop();
+}
+
+void LiveService::OnSent(const TcpConnectionPtr &conn)
+{
+
+}
+bool LiveService::OnSentNextChunk(const TcpConnectionPtr &conn)
+{
+    return false;
+}
+
+void LiveService::OnRequest(const TcpConnectionPtr &conn,const HttpRequestPtr &req,const PacketPtr &packet)
+{
+    auto http_cxt = conn->GetContext<HttpContext>(kHttpContext);
+    if(!http_cxt)
+    {
+        LIVE_ERROR << "no found http context.something must be wrong.";
+        return;
+    }
+    if(req->IsRequest())
+    {
+        LIVE_DEBUG << "req method:" << req->Method() << " path:" << req->Path();
+    }
+    else 
+    {
+        LIVE_DEBUG << "req code:" << req->GetStatusCode() << " msg:" << HttpUtils::ParseStatusMessage(req->GetStatusCode());
+    }
+
+    auto headers = req->Headers();
+    for(auto const &h:headers)
+    {
+        LIVE_DEBUG << h.first << ":" << h.second;
+    }
+    
+    if(req->IsRequest())
+    {
+        //http://ip:port/domain/app/stream.flv
+        //http://ip:port/domain/app/stream/filename.flv
+        auto list = base::StringUtils::SplitString(req->Path(),"/");
+        if(list.size()<4)
+        {
+            auto res = HttpRequest::NewHttp400Response();
+            http_cxt->PostRequest(res);
+            return ;
+        }
+        const std::string &domain = list[1];
+        const std::string &app = list[2];
+        string filename = list[3];
+        std::string stream_name;
+        if(list.size()>4)
+        {
+            filename = list[4];
+            stream_name = list[3];
+        }
+        else 
+        {
+            stream_name = base::StringUtils::FileName(filename);
+        }
+
+        std::string session_name = domain+"/"+app+"/"+stream_name;
+        LIVE_DEBUG << "request session name:" << session_name;
+        auto s = CreateSession(session_name);
+        if(!s)
+        {
+            LIVE_ERROR << "cant create session  name:" << session_name;
+            auto http_cxt = conn->GetContext<HttpContext>(kHttpContext);
+            if(http_cxt)
+            {
+                auto res = HttpRequest::NewHttp404Response();
+                http_cxt->PostRequest(res);
+                return ;
+            }
+        }        
+        std::string ext = base::StringUtils::Extension(filename);
+        // if(ext == "flv")
+        // {
+        //     auto user = s->CreatePlayerUser(conn,session_name,"",UserType::kUserTypePlayerFlv);
+        //     if(!user)   
+        //     {
+        //         LIVE_ERROR << "cant create user  session name:" << session_name;
+        //         auto res = HttpRequest::NewHttp404Response();
+        //         http_cxt->PostRequest(res);
+        //         return ;  
+        //     }    
+        //     conn->SetContext(kUserContext,user);
+        //     auto flv = std::make_shared<FlvContext>(conn,this);
+        //     conn->SetContext(kFlvContext,flv);
+        //     s->AddPlayer(std::dynamic_pointer_cast<PlayerUser>(user));     
+        // }
+        // else if(ext == "m3u8")
+        // {
+        //     auto playlist = s->GetStream()->PlayList();
+        //     if(!playlist.empty())
+        //     {
+        //         auto res = std::make_shared<HttpRequest>(false);
+        //         res->AddHeader("server","tmms");
+        //         res->AddHeader("content-length",std::to_string(playlist.size()));
+        //         res->AddHeader("content-type","application/vnd.apple.mpegurl");
+        //         res->SetStatusCode(200);
+        //         res->SetBody(playlist);
+        //         LIVE_DEBUG << "http:\n" << res->AppendToBuffer();
+        //         http_cxt->PostRequest(res);
+        //     }
+        //     else 
+        //     {
+        //         auto res = HttpRequest::NewHttp404Response();
+        //         http_cxt->PostRequest(res);
+        //         return ;  
+        //     }
+        // }
+        // else if(ext == "ts")
+        // {
+        //     LIVE_DEBUG << "request ts:" << filename;
+        //     auto frag = s->GetStream()->GetFragment(filename);
+        //     if(frag)
+        //     {
+        //         auto res = std::make_shared<HttpRequest>(false);
+        //         res->AddHeader("server","tmms");
+        //         res->AddHeader("content-length",std::to_string(frag->Size()));
+        //         res->AddHeader("content-type","video/MP2T");
+        //         res->SetStatusCode(200);
+        //         http_cxt->PostRequest(res->MakeHeaders(),frag->FragmentData());
+        //     }
+        // }
+    }
 }
