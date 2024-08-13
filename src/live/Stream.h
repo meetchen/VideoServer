@@ -2,7 +2,7 @@
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-10 18:04:16
  * @LastEditors: duanran 995122760@qq.com
- * @LastEditTime: 2024-07-17 17:53:43
+ * @LastEditTime: 2024-08-13 19:51:45
  * @FilePath: /VideoServer/src/live/Stream.h
  * @Description: 完成视频流的录入与推出，缓存
  * 
@@ -65,6 +65,16 @@ namespace vdse
                 void AddPacket(PacketPtr && packet);
 
                 void GetFrames(const PlayerUserPtr &user);
+
+                bool HasVideo() const 
+                {
+                    return has_video_;
+                }
+
+                bool HasAudio() const 
+                {
+                    return has_audio_;
+                }
 
             private:
                 /**

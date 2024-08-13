@@ -2,7 +2,7 @@
  * @Author: duanran 995122760@qq.com
  * @Date: 2024-07-16 10:21:45
  * @LastEditors: duanran 995122760@qq.com
- * @LastEditTime: 2024-08-12 22:39:12
+ * @LastEditTime: 2024-08-13 19:42:50
  * @FilePath: /VideoServer/src/live/LiveService.h
  * @Description: 直播业务的管理类
  * 
@@ -36,7 +36,7 @@ namespace vdse
         using namespace vdse::network;
         using namespace vdse::base;
 
-        class LiveService : public vdse::mmedia::RtmpCallBack, vdse::mmedia::HttpCallBack
+        class LiveService : public vdse::mmedia::RtmpCallBack, public vdse::mmedia::HttpCallBack
         {
             public:
                 LiveService() = default;

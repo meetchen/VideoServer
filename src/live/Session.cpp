@@ -2,7 +2,7 @@
  * @Author: duanran 995122760@qq.com
  * @Date: 2024-07-15 15:24:21
  * @LastEditors: duanran 995122760@qq.com
- * @LastEditTime: 2024-07-17 14:27:56
+ * @LastEditTime: 2024-08-13 16:16:47
  * @FilePath: /VideoServer/src/live/Session.cpp
  * @Description: 
  * 
@@ -14,6 +14,7 @@
 #include "base/StringUtils.h"
 #include "live/base/LiveLog.h"
 #include "live/RtmpPlayUser.h"
+#include "mmedia/flv/FlvPlayerUser.h"
 
 
 using namespace vdse::live;
@@ -99,9 +100,22 @@ UserPtr Session::CreatePlayer(const std::string &session_name, const ConnectionP
         return null_user;
     }
     PlayerUserPtr user;
+    //TODO 使用抽象工厂
     if (type == UserType::kUserTypePlayerRtmp)
     {
         user = std::make_shared<RtmpPlayUser>(conn, stream_, shared_from_this());
+    }
+    else if(type == UserType::kUserTypePlayerFlv)
+    {
+        user = std::make_shared<FlvPlayerUser>(conn,stream_,shared_from_this());
+    }
+    // else if(type == UserType::kUserTypePlayerWebRTC)
+    // {
+    //     user = std::make_shared<WebrtcPlayerUser>(conn,stream_,shared_from_this());
+    // }
+    else 
+    {
+        return null_user;
     }
     user->SetAppInfo(appinfo_);
     user->SetDomainName(list[0]);

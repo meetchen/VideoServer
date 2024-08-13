@@ -93,6 +93,8 @@ namespace vdse
             {
                 return stream_;
             }
+
+  
         protected:
             ConnectionPtr connection_;
             StreamPtr stream_;

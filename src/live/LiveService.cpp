@@ -8,6 +8,7 @@
 #include "mmedia/http/HttpServer.h"
 #include "mmedia/http/HttpUtils.h"
 #include "mmedia/http/HttpContext.h"
+#include "mmedia/flv/FlvContext.h"
 #include "network/DnsService.h"
 #include <iostream>
 
@@ -333,21 +334,21 @@ void LiveService::OnRequest(const TcpConnectionPtr &conn,const HttpRequestPtr &r
             }
         }        
         std::string ext = base::StringUtils::Extension(filename);
-        // if(ext == "flv")
-        // {
-        //     auto user = s->CreatePlayerUser(conn,session_name,"",UserType::kUserTypePlayerFlv);
-        //     if(!user)   
-        //     {
-        //         LIVE_ERROR << "cant create user  session name:" << session_name;
-        //         auto res = HttpRequest::NewHttp404Response();
-        //         http_cxt->PostRequest(res);
-        //         return ;  
-        //     }    
-        //     conn->SetContext(kUserContext,user);
-        //     auto flv = std::make_shared<FlvContext>(conn,this);
-        //     conn->SetContext(kFlvContext,flv);
-        //     s->AddPlayer(std::dynamic_pointer_cast<PlayerUser>(user));     
-        // }
+        if(ext == "flv")
+        {
+            auto user = s->CreatePlayer(session_name,conn,UserType::kUserTypePlayerFlv, "");
+            if(!user)   
+            {
+                LIVE_ERROR << "cant create user  session name:" << session_name;
+                auto res = HttpRequest::NewHttp404Response();
+                http_cxt->PostRequest(res);
+                return ;  
+            }    
+            conn->SetContext(kUserContext,user);
+            auto flv = std::make_shared<FlvContext>(conn,this);
+            conn->SetContext(kFlvContext,flv);
+            s->AddPlayer(std::dynamic_pointer_cast<PlayerUser>(user));     
+        }
         // else if(ext == "m3u8")
         // {
         //     auto playlist = s->GetStream()->PlayList();
