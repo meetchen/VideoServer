@@ -1,8 +1,8 @@
 /*
  * @Author: Duanran 995122760@qq.com
  * @Date: 2024-07-01 19:03:58
- * @LastEditors: Duanran 995122760@qq.com
- * @LastEditTime: 2024-07-10 14:45:04
+ * @LastEditors: duanran 995122760@qq.com
+ * @LastEditTime: 2024-08-13 20:26:59
  * @FilePath: /VideoServer/src/mmedia/base/MMediaLog.h
  * @Description: 使用base定义的日志模块
  * 
@@ -27,3 +27,17 @@
 
 #define RTMP_WARN LOG_WARN
 #define RTMP_ERROR LOG_ERROR
+
+
+#ifdef DEMUX_DEBUG_ON
+#define DEMUX_TRACE LOG_TRACE << "DEMUX::"
+#define DEMUX_DEBUG LOG_DEBUG << "DEMUX::"
+#define DEMUX_INFO LOG_INFO << "DEMUX::"
+#else
+#define DEMUX_TRACE if(0) LOG_TRACE
+#define DEMUX_DEBUG if(0) LOG_DEBUG
+#define DEMUX_INFO if(0) LOG_INFO
+#endif
+
+#define DEMUX_WARN LOG_WARN
+#define DEMUX_ERROR LOG_ERROR

@@ -7,3 +7,6 @@ lib
 bin/sbin/videoserver
 .VSCodeCounter/
 cap/
+command.md
+bin/config/publish/duanran.top.json
+/bin/log/
