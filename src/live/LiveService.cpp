@@ -8,6 +8,7 @@
 #include "mmedia/http/HttpServer.h"
 #include "mmedia/http/HttpUtils.h"
 #include "mmedia/http/HttpContext.h"
+#include "network/DnsService.h"
 #include <iostream>
 
 
@@ -219,6 +220,7 @@ void LiveService::Start()
     pool_ = new EventLoopThreadPool(config->thread_nums_, config->cpu_start_, config->cpus_);
     pool_->Start();
 
+    sDnsService->Start();
 
     // 获取配置文件中定义的文件
     auto services = config->GetServiceInfos();

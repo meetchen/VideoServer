@@ -11,6 +11,10 @@
 
 # target_link_libraries(RtmpServerTest base network mmedia )
 
-add_executable(RtmpClientTest RtmpClientTest.cpp)
+# add_executable(RtmpClientTest RtmpClientTest.cpp)
 
-target_link_libraries(RtmpClientTest base network mmedia  jsoncpp.a crypto)
+# target_link_libraries(RtmpClientTest base network mmedia  jsoncpp.a crypto)
+
+add_executable(HttpClientTest HttpClientTest.cpp)
+
+target_link_libraries(HttpClientTest base network mmedia  jsoncpp.a crypto)
