@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+
 using namespace vdse::network;
 
 static thread_local EventLoop *t_local_eventLoop = nullptr;
@@ -203,7 +204,7 @@ void EventLoop::RunInLoop(const Func &f)
         return;
     }
     std::lock_guard<std::mutex> lk(lock_);
-    functions_.emplace(f);
+    functions_.emplace(f); // // 如果不是，则将任务推入任务队列
     WakeUp();
 }
 
@@ -215,11 +216,17 @@ void EventLoop::RunInLoop(Func &&f)
         return;
     }
     std::lock_guard<std::mutex> lk(lock_);
-    // 提示编译器 使用右值函数
+    // 提示编译器 使用右值函数 
     functions_.emplace(std::move(f));
 
     WakeUp();
 }
+
+bool EventLoop::InLoop()
+{
+    return this == t_local_eventLoop;
+}
+
 
 void EventLoop::RunFunctions()
 {
@@ -232,10 +239,6 @@ void EventLoop::RunFunctions()
     }
 }
 
-bool EventLoop::InLoop()
-{
-    return this == t_local_eventLoop;
-}
 
 void EventLoop::WakeUp()
 {
